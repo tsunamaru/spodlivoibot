@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE hibernate-configuration PUBLIC
+    "-//Hibernate/Hibernate Configuration DTD//EN"
+    "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+  <session-factory>
+    <property name="connection.url"><![CDATA[jdbc:sqlite:db/spodlivoi.sqlite]]></property>
+    <property name="connection.driver_class">org.sqlite.JDBC</property>
+    <property name="hibernate.dialect">org.hibernate.dialect.SQLiteDialect</property>
+    <property name="connection.pool_size">20</property>
+    <!--<property name="hibernate.hbm2ddl.auto">update</property>-->
+    <mapping class="database.models.Chats"/>
+    <mapping class="database.models.Dicks"/>
+    <mapping class="database.models.Users"/>
+  </session-factory>
+</hibernate-configuration>
