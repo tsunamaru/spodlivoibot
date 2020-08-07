@@ -15,8 +15,7 @@ RUN wget -O /etc/apk/keys/amazoncorretto.rsa.pub https://apk.corretto.aws/amazon
 	tzdata \
     && \
     cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
-    echo ${TZ} > /etc/timezone && \
-    apk del tzdata \
+    echo "${TZ}" > /etc/timezone && \
     mkdir -p /opt/spodlivoi && \
     chmod 755 /opt/spodlivoi && \
     chown ${RUNAS} /opt/spodlivoi
