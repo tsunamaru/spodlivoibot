@@ -56,6 +56,7 @@ public class Bot extends TelegramLongPollingBot {
        add("gasiki2");
        add("durkaebt");
        add("daEntoOn");
+       add("Bodyafleks3");
     }};
 
     private JSONArray baby;
