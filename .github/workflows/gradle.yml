@@ -21,4 +21,4 @@ jobs:
     - name: Install docker-compose
       run: sudo apt install -y docker-compose
     - name: Build project
-      run: whoami && id
+      run: mv .env.ci .env && sudo docker-compose run --rm gradle
