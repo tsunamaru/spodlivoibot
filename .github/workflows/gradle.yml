@@ -16,9 +16,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Install docker
-      run: curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh get-docker.sh
-    - name: Install docker-compose
-      run: sudo apt install -y docker-compose
+    - name: Install JDK
+      run: wget -O- https://apt.corretto.aws/corretto.key | sudo apt-key add - && sudo add-apt-repository 'deb https://apt.corretto.aws stable main' &&  sudo apt-get update && sudo apt-get install -y java-1.8.0-amazon-corretto-jdk
+    - name: Install Gradle
+      run: wget https://downloads.gradle-dn.com/distributions/gradle-6.3-bin.zip && unzip gradle-6.3-bin.zip && export PATH=${PWD}/gradle-6.3/bin:{PATH}
     - name: Build project
-      run: mv .env.ci .env && sudo docker-compose run --rm gradle
+      run: gradle build --no-daemon
