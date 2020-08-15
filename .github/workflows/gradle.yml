@@ -19,6 +19,6 @@ jobs:
     - name: Install JDK
       run: wget -O- https://apt.corretto.aws/corretto.key | sudo apt-key add - && sudo add-apt-repository 'deb https://apt.corretto.aws stable main' &&  sudo apt-get update && sudo apt-get install -y java-1.8.0-amazon-corretto-jdk
     - name: Install Gradle
-      run: wget https://downloads.gradle-dn.com/distributions/gradle-6.3-bin.zip && unzip gradle-6.3-bin.zip && export PATH=${PWD}/gradle-6.3/bin:{PATH}
+      run: wget https://downloads.gradle-dn.com/distributions/gradle-6.3-bin.zip && unzip gradle-6.3-bin.zip
     - name: Build project
-      run: gradle build --no-daemon
+      run: ./gradle-6.3/bin/gradle build --no-daemon
