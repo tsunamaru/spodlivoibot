@@ -16,11 +16,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Upgrade system
-      run: sudo apt update && sudo apt upgrade -y
     - name: Install docker
       run: curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh get-docker.sh
     - name: Install docker-compose
       run: sudo apt install -y docker-compose
     - name: Build project
-      run: sudo docker-compose run --rm gradle
+      run: mv .env.example .env && sudo docker-compose run --rm gradle
