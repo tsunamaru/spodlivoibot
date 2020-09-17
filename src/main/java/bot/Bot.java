@@ -57,6 +57,12 @@ public class Bot extends TelegramLongPollingBot {
        add("durkaebt");
        add("daEntoOn");
        add("Bodyafleks3");
+       add("Rjaka228");
+       add("Stickers_ebat");
+       add("em_sho");
+       add("vdyrky");
+       add("onegaionegai");
+       add("sp792a9133ad7d0b9144089d7350483d5c_by_stckrRobot");
     }};
 
     private JSONArray baby;
