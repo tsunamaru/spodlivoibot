@@ -10,7 +10,7 @@ services:
         volumes: 
             - ./:/opt/spodlivoi
         user: ${RUNAS}
-        command: gradle build --no-daemon
+        command: gradle build --no-daemon -g gradle-user-home
         working_dir: /opt/spodlivoi
     
     spodlivoi:
