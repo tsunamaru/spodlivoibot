@@ -259,7 +259,7 @@ public class Bot extends TelegramLongPollingBot {
                 });
                 thread.start();
             } else if (update.hasEditedMessage()) {
-                sendMessage(update.getEditedMessage(), "Анус себе отредактируй");
+                // sendMessage(update.getEditedMessage(), "Анус себе отредактируй");
             }
         } catch (Exception e){
             
