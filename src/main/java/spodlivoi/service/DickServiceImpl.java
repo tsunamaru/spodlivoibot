@@ -1,50 +1,40 @@
-package dick;
+package spodlivoi.service;
 
-import database.DatabaseManager;
-import database.models.Dicks;
-import database.models.Users;
-import org.hibernate.Session;
-import utils.Logs;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import spodlivoi.entity.Dicks;
+import spodlivoi.entity.Users;
+import spodlivoi.repository.DickRepository;
+import spodlivoi.utils.Randomizer;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 
-public class DickRoller {
-    public static class Holder{
-        private static DickRoller instance = new DickRoller();
-        public static DickRoller getInstance() {
-            return instance;
-        }
-    }
+@Component
+public class DickServiceImpl implements DickService {
 
-    private final static int TIME_CONVERT = 0;
-    private static final String SQL_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    @Autowired
+    private DickRepository dickRepository;
 
-    public String roll(Users u, Session session){
-        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(SQL_DATE_FORMAT);
+    public String roll(Users user){
         try {
-            if( u == null)
-                throw new NullPointerException("User не может быть null");
-            Users user = session.get(Users.class, u.getId());
+
             Dicks dick = null;
             boolean first = false;
             int size = 0;
             try {
-                dick = new ArrayList<>(user.getDicks()).get(0);
+                dick = user.getDick();
             } catch (Exception e) {
                 e.printStackTrace();
             }
             if (dick == null) {
                 dick = new Dicks();
-                dick.setUsers(user);
+                dick.setUser(user);
                 first = true;
             }else {
                 LocalDateTime current = LocalDateTime.now();
-                LocalDateTime last = LocalDateTime.parse(dick.getLastMeasurement(), formatter);
-                current = current.minusHours(TIME_CONVERT);
-                last = last.minusHours(TIME_CONVERT);
+                LocalDateTime last = dick.getLastMeasurement();
+                current = current.minusHours(0);
+                last = last.minusHours(0);
                if(current.getDayOfMonth() == last.getDayOfMonth() &&
                   current.getMonthValue() == last.getMonthValue())
                     return "Ты уже измерял свой огрызок сегодня!\nПриходи через " +
@@ -56,11 +46,9 @@ public class DickRoller {
             size += upSizeN;
             if (size < 0 || upSizeN == 0)
                 size = 0;
-            session.beginTransaction();
             dick.setSize(size);
-            dick.setLastMeasurement(new Timestamp(System.currentTimeMillis()).toLocalDateTime().format(formatter));
-            session.saveOrUpdate(dick);
-            session.getTransaction().commit();
+            dick.setLastMeasurement(LocalDateTime.now());
+            dickRepository.save(dick);
             int dickText = Randomizer.getRandomNumberInRange(1, 5);
             String upSize = String.valueOf(upSizeN).
                     replaceAll("-", "");

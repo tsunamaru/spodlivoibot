@@ -16,9 +16,9 @@ RUN wget -O /etc/apk/keys/amazoncorretto.rsa.pub https://apk.corretto.aws/amazon
     && \
     cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
     echo "${TZ}" > /etc/timezone && \
-    mkdir -p /opt/spodlivoi && \
-    chmod 755 /opt/spodlivoi && \
-    chown ${RUNAS} /opt/spodlivoi
+    mkdir -p /opt/ru.dktitov.spodlivoi && \
+    chmod 755 /opt/ru.dktitov.spodlivoi && \
+    chown ${RUNAS} /opt/ru.dktitov.spodlivoi
 
 ENV LANG C.UTF-8
 ENV JAVA_HOME=/usr/lib/jvm/default-jvm/jre

@@ -2,42 +2,59 @@ buildscript {
     repositories {
         jcenter()
     }
-    dependencies {
-        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
-    }
 }
 plugins {
+    id 'org.springframework.boot' version '2.3.2.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.9.RELEASE'
     id 'java'
-    id 'application'
 }
-mainClassName = 'bot.Main'
-sourceCompatibility = 1.8
 
-apply plugin: 'com.github.johnrengelman.shadow'
+tasks.withType(JavaCompile) {
+    sourceCompatibility = 11
+    targetCompatibility = 11
+    options.encoding = 'UTF-8'
+}
+
+configurations {
+    all {
+        implementation {
+            exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+        }
+        testImplementation {
+            exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+        }
+    }
+}
+
 repositories {
     mavenCentral()
-    google()
 }
-jar {
-    manifest {
-        attributes 'Main-Class': 'bot.Main'
-    }
-    from {
-        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-    }
-}
-group 'spodlivoi'
-version ''
 
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '5.6.2'
-    compile group: 'org.telegram', name: 'telegrambots', version: '4.9'
-    compile 'org.hibernate:hibernate-core:5.4.17.Final'
+
     compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.32.3.1'
     compile group: 'com.zsoltfabok', name: 'sqlite-dialect', version: '1.0'
-    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.30'
-    compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.30'
-    compile group: 'commons-io', name: 'commons-io', version: '2.7'
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-log4j2'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    compile('com.github.xabgesagtx:telegram-spring-boot-starter:0.22')
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
+    testImplementation 'org.springframework.security:spring-security-test'
+
 
 }
+
+test {
+    useJUnitPlatform {
+        excludeTags 'integration'
+    }
+}
+

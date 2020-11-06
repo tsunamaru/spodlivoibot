@@ -1,17 +1,17 @@
 version: '3'
 
 # Build: docker-compose run --rm gradle
-# Run: docker-compose up -d spodlivoi
+# Run: docker-compose up -d ru.dktitov.spodlivoi
 services: 
     gradle:
         image: gradle:6.3-jdk8
         env_file:
             - .env
         volumes: 
-            - ./:/opt/spodlivoi
+            - ./:/opt/ru.dktitov.spodlivoi
         user: ${RUNAS}
         command: gradle build --no-daemon -g gradle-user-home
-        working_dir: /opt/spodlivoi
+        working_dir: /opt/ru.dktitov.spodlivoi
     
     spodlivoi:
         image: spodlivoibot
@@ -26,10 +26,10 @@ services:
             dockerfile: ./Dockerfile
             context: .
         volumes:
-            - ./build/libs/spodlivoi.jar:/opt/spodlivoi/spodlivoi.jar:ro
-            - ./db:/opt/spodlivoi/db
+            - ./build/libs/spodlivoi.jar:/opt/ru.dktitov.spodlivoi/spodlivoi.jar:ro
+            - ./db:/opt/ru.dktitov.spodlivoi/db
         user: ${RUNAS}
-        working_dir: /opt/spodlivoi
+        working_dir: /opt/ru.dktitov.spodlivoi
         container_name: spodlivoibot
         tty: true
         stdin_open: true
