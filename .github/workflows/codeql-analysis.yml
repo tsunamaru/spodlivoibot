@@ -54,18 +54,15 @@ jobs:
     # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)
     - name: Autobuild
-      uses: github/codeql-action/autobuild@v1
-
-    # ℹ️ Command-line programs to run using the OS shell.
-    # 📚 https://git.io/JvXDl
-
-    # ✏️ If the Autobuild fails above, remove it and uncomment the following three lines
-    #    and modify them (or add more) to build your code if your project
-    #    uses a compiled language
-
-    #- run: |
-    #   make bootstrap
-    #   make release
+    - run: |
+       run: wget -O- https://apt.corretto.aws/corretto.key 
+       sudo apt-key add - 
+       sudo add-apt-repository 'deb https://apt.corretto.aws stable main' 
+       sudo apt-get update 
+       sudo apt-get install -y java-11-amazon-corretto-jdk
+       wget https://downloads.gradle-dn.com/distributions/gradle-6.3-bin.zip 
+       unzip gradle-6.3-bin.zip
+       ./gradle-6.3/bin/gradle build --no-daemon
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
