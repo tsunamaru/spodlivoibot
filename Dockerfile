@@ -1,18 +1,13 @@
-FROM alpine:3.12
-
-ARG version=8.265.01.2
+FROM amazoncorretto:11-alpine
 
 ARG RUNAS
 ARG TOKEN
 ARG BOTNAME
 ARG TZ
 
-RUN wget -O /etc/apk/keys/amazoncorretto.rsa.pub https://apk.corretto.aws/amazoncorretto.rsa.pub && \
-    echo "https://apk.corretto.aws" >> /etc/apk/repositories && \
-    apk add --no-cache \ 
-        amazon-corretto-8-jre=$version-r0 \
+RUN apk add --no-cache \ 
         ffmpeg \
-	tzdata \
+        tzdata \
     && \
     cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
     echo "${TZ}" > /etc/timezone && \

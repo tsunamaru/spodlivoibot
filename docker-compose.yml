@@ -4,7 +4,7 @@ version: '3'
 # Run: docker-compose up -d spodlivoi
 services: 
     gradle:
-        image: gradle:6.3-jdk8
+        image: gradle:6.3-jdk11
         env_file:
             - .env
         volumes: 
