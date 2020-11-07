@@ -29,32 +29,32 @@ jobs:
         # https://docs.github.com/en/github/finding-security-vulnerabilities-and-errors-in-your-code/configuring-code-scanning#overriding-automatic-language-detection
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
-      with:
-        # We must fetch at least the immediate parents so that if this is
-        # a pull request then we can checkout the head.
-        fetch-depth: 2
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          # We must fetch at least the immediate parents so that if this is
+          # a pull request then we can checkout the head.
+          fetch-depth: 2
 
-    # If this run was triggered by a pull request event, then checkout
-    # the head of the pull request instead of the merge commit.
-    - run: git checkout HEAD^2
-      if: ${{ github.event_name == 'pull_request' }}
+      # If this run was triggered by a pull request event, then checkout
+      # the head of the pull request instead of the merge commit.
+      - run: git checkout HEAD^2
+        if: ${{ github.event_name == 'pull_request' }}
 
-    # Initializes the CodeQL tools for scanning.
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v1
-      with:
-        languages: ${{ matrix.language }}
-        # If you wish to specify custom queries, you can do so here or in a config file.
-        # By default, queries listed here will override any specified in a config file. 
-        # Prefix the list here with "+" to use these queries and those in the config file.
-        # queries: ./path/to/local/query, your-org/your-repo/queries@main
+      # Initializes the CodeQL tools for scanning.
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v1
+        with:
+          languages: ${{ matrix.language }}
+          # If you wish to specify custom queries, you can do so here or in a config file.
+          # By default, queries listed here will override any specified in a config file.
+          # Prefix the list here with "+" to use these queries and those in the config file.
+          # queries: ./path/to/local/query, your-org/your-repo/queries@main
 
-    # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
-    # If this step fails, then you should remove it and run the build manually (see below)
-    - name: Autobuild
-      run:  wget -O- https://apt.corretto.aws/corretto.key | sudo apt-key add - && sudo add-apt-repository 'deb https://apt.corretto.aws stable main' &&  sudo apt-get update && sudo apt-get install -y java-11-amazon-corretto-jdk && wget https://downloads.gradle-dn.com/distributions/gradle-6.3-bin.zip && unzip gradle-6.3-bin.zip && ./gradle-6.3/bin/gradle build --no-daemon
+      # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
+      # If this step fails, then you should remove it and run the build manually (see below)
+      - name: Autobuild
+        run:  wget -O- https://apt.corretto.aws/corretto.key | sudo apt-key add - && sudo add-apt-repository 'deb https://apt.corretto.aws stable main' &&  sudo apt-get update && sudo apt-get install -y java-11-amazon-corretto-jdk && wget https://downloads.gradle-dn.com/distributions/gradle-6.3-bin.zip && unzip gradle-6.3-bin.zip && ./gradle-6.3/bin/gradle build --no-daemon
 
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v1
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v1
