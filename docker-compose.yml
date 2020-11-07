@@ -19,9 +19,7 @@ services:
             - .env
         build:
             args:
-                - TOKEN=${TOKEN}
                 - RUNAS=${RUNAS}
-                - BOTNAME=${BOTNAME}
                 - TZ=${TZ}
             dockerfile: ./Dockerfile
             context: .
