@@ -1,23 +1,20 @@
-package bot;
+package spodlivoi.service;
 
-
-import com.google.inject.internal.cglib.core.internal.$CustomizerRegistry;
-import database.DatabaseManager;
-import database.models.Chats;
-import database.models.Dicks;
-import database.models.Users;
-import dick.DickRoller;
-import dick.Randomizer;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.apache.http.conn.ConnectTimeoutException;
-import org.apache.http.conn.ConnectionPoolTimeoutException;
-import org.hibernate.Session;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerInlineQuery;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
-import org.telegram.telegrambots.meta.api.methods.send.*;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.methods.send.SendSticker;
+import org.telegram.telegrambots.meta.api.methods.send.SendVideo;
 import org.telegram.telegrambots.meta.api.methods.stickers.GetStickerSet;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -29,41 +26,28 @@ import org.telegram.telegrambots.meta.api.objects.inlinequery.result.InlineQuery
 import org.telegram.telegrambots.meta.api.objects.stickers.Sticker;
 import org.telegram.telegrambots.meta.api.objects.stickers.StickerSet;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
-import utils.Logs;
-import utils.Tools;
+import spodlivoi.entity.Chats;
+import spodlivoi.entity.Users;
+import spodlivoi.enums.CopypasteType;
+import spodlivoi.repository.ChatRepository;
+import spodlivoi.repository.UserRepository;
+import spodlivoi.utils.Randomizer;
+import spodlivoi.utils.Tools;
 
+import javax.annotation.PostConstruct;
 import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
-import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import static utils.Tools.REPAIR_TEXT_MESSAGE;
+import static spodlivoi.utils.Tools.REPAIR_TEXT_MESSAGE;
 
+@Component
+@Slf4j
+public class BotService extends TelegramLongPollingBot {
 
-public class Bot extends TelegramLongPollingBot {
-
-    private static final String DVACH_URL = "https://2ch.hk/b/catalog.json";
-
-    private final static ArrayList<String> fightPacks = new ArrayList<String>(){{
-       add("sosatlezhatsosat");
-       add("fightpics");
-       add("test228idinaxui");
-       add("davlyu");
-       add("gasiki2");
-       add("durkaebt");
-       add("daEntoOn");
-       add("Bodyafleks3");
-       add("Rjaka228");
-       add("Stickers_ebat");
-       add("em_sho");
-       add("vdyrky");
-       add("onegaionegai");
-       add("sp792a9133ad7d0b9144089d7350483d5c_by_stckrRobot");
-    }};
 
     private JSONArray baby;
     private JSONArray dota;
@@ -71,20 +55,51 @@ public class Bot extends TelegramLongPollingBot {
     private JSONArray olds;
     private JSONArray shizik;
 
-    public Bot(){
-        InputStream insultsStream = getClass().getResourceAsStream("baby" + ".json");
+    @Value("${telegram.bot.token}")
+    private String botToken;
+    @Value("${telegram.bot.username}")
+    private String botUserName;
+    @Value("${dvach.url}")
+    private String dvachUrl;
+    @Value("${telegram.bot.sticker-packs}")
+    private ArrayList<String> fightPacks;
+    @Value("classpath:baby.json")
+    private Resource babyFile;
+    @Value("classpath:dota.json")
+    private Resource dotaFile;
+    @Value("classpath:kolchan.json")
+    private Resource kolchanFile;
+    @Value("classpath:olds.json")
+    private Resource oldsFile;
+    @Value("classpath:shizik.json")
+    private Resource shizikFile;
+
+    @Autowired
+    private ChatRepository chatRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private DickService dickService;
+    @Autowired
+    private AnusService anusService;
+
+
+
+    @PostConstruct
+    public void initialization() throws IOException {
+        InputStream insultsStream = new FileInputStream(babyFile.getFile());
         JSONObject insultsJson = new JSONObject(Tools.convertStreamToString(insultsStream));
         baby = insultsJson.getJSONArray("baby");
-        insultsStream = getClass().getResourceAsStream("dota" + ".json");
+        insultsStream = new FileInputStream(dotaFile.getFile());
         insultsJson = new JSONObject(Tools.convertStreamToString(insultsStream));
         dota = insultsJson.getJSONArray("dota");
-        insultsStream = getClass().getResourceAsStream("kolchan" + ".json");
+        insultsStream = new FileInputStream(kolchanFile.getFile());
         insultsJson = new JSONObject(Tools.convertStreamToString(insultsStream));
         kolchan = insultsJson.getJSONArray("kolchan");
-        insultsStream = getClass().getResourceAsStream("olds" + ".json");
+        insultsStream = new FileInputStream(oldsFile.getFile());
         insultsJson = new JSONObject(Tools.convertStreamToString(insultsStream));
         olds = insultsJson.getJSONArray("olds");
-        insultsStream = getClass().getResourceAsStream("shizik" + ".json");
+        insultsStream = new FileInputStream(shizikFile.getFile());
         insultsJson = new JSONObject(Tools.convertStreamToString(insultsStream));
         shizik = insultsJson.getJSONArray("shizik");
         article3.setTitle("Ребёнок");
@@ -112,90 +127,22 @@ public class Bot extends TelegramLongPollingBot {
         randomWeb.setId("1");
         randomWeb.setDescription("Рандомный Webm из /b");
         randomWeb.setTitle("цуим");
+        log.info("Бот запущен");
     }
-
 
     @Override
     public void onUpdateReceived(Update update) {
+
         try {
             if (update.hasMessage()) {
                 Message message = update.getMessage();
-           /* try{
-                Logs.log(message.getSticker().getSetName());
-            }catch (Exception ignored){}*/
                 if (message.isCommand()) {
-                    String messageText = message.getText();
-                    String command = "";
-                    if (messageText.contains("@")) {
-                        command = messageText.split("@")[0];
-                        if (!messageText.split("@")[1].equals(getBotUsername()))
-                            return;
-                    } else {
-                        command = messageText;
-                    }
-
-                    if (command.contains("/start")) {
-                        startCommand(update.getMessage());
-                        return;
-                    } else {
-                        if (!registerUser(update.getMessage(), null)) {
-                            SendMessage sendMessage = new SendMessage().setChatId(message.getChatId());
-                            sendMessage.setText("Сначала зарегистрируйте чат коммандой /start");
-                            try {
-                                execute(sendMessage);
-                            } catch (TelegramApiException e) {
-                                e.printStackTrace();
-                            }
-                            return;
-                        }
-                    }
-                    if (command.contains("/dick")) {
-                        rollDick(message);
-                    } else if (command.contains("/fight")) {
-                        if (message.isReply()) {
-                            sendFightSticker(message.getReplyToMessage(), true);
-                            deleteMessage(message);
-                        } else
-                            sendFightSticker(message, false);
-                    } else if (command.contains("/test")) {
-                        sendMessage(message, "Я работаю, а твой писюн - нет!");
-                    } else if (command.contains("/topdicks")) {
-                        SendMessage sendMessage = new SendMessage().setChatId(message.getChatId());
-                        sendMessage.setText(getTopDicks(getChatById(message.getChatId())));
-                        try {
-                            execute(sendMessage);
-                        } catch (TelegramApiException e) {
-                            e.printStackTrace();
-                        }
-                    } else if (command.contains("/bred")) {
-                        sendRandomThread(message);
-                    } else if (command.contains("/shizik")) {
-                        sendRandomCopypaste(CopypasteType.shizik, message);
-                    } else if (command.contains("/olds")) {
-                        sendRandomCopypaste(CopypasteType.olds, message);
-                    } else if (command.contains("/kolchan")) {
-                        sendRandomCopypaste(CopypasteType.kolchan, message);
-                    } else if (command.contains("/dota")) {
-                        sendRandomCopypaste(CopypasteType.dota, message);
-                    } else if (command.contains("/baby")) {
-                        sendRandomCopypaste(CopypasteType.baby, message);
-                    } else if (command.contains("/webm")) {
-                        sendRandomWebm(message);
-                    } else if(command.contains("/videostats")){
-                        SendMessage sendMessage = new SendMessage().setChatId(message.getChatId());
-                        sendMessage.setText("Количество видео в обработке: " + videoStats);
-                        try {
-                            execute(sendMessage);
-                        } catch (TelegramApiException e) {
-                            e.printStackTrace();
-                        }
-                    }
-
+                    acceptCommand(message);
                 } else if (message.isReply()) {
                     if (message.getReplyToMessage().getFrom().getUserName().equals(getBotUsername()))
                         sendFightSticker(message, true);
                 } else if (message.hasText()) {
-                    if (message.getText().contains(System.getProperty("botname")))
+                    if (message.getText().contains(getBotUsername()))
                         sendFightSticker(message, true);
                 }
             } else if (update.hasInlineQuery()) {
@@ -262,7 +209,7 @@ public class Bot extends TelegramLongPollingBot {
                 // sendMessage(update.getEditedMessage(), "Анус себе отредактируй");
             }
         } catch (Exception e){
-            
+
             e.printStackTrace();
         }
     }
@@ -275,17 +222,6 @@ public class Bot extends TelegramLongPollingBot {
     InlineQueryResultArticle repairArticle = new InlineQueryResultArticle();
     InlineQueryResultVideo randomWeb = new InlineQueryResultVideo();
 
-    public static void writeErrorLog(String log){
-/*        try(FileWriter writer = new FileWriter("/home/triangle/bot_log.txt", true))
-        {
-            writer.append(log).append("\n\n");
-            writer.flush();
-        }
-        catch(IOException ex) {
-            System.out.println(ex.getMessage());
-        }*/
-    }
-
     private void sendMessage(Message message, String text){
         SendMessage sendMessage = new SendMessage().setChatId(message.getChatId());
         sendMessage.setReplyToMessageId(message.getMessageId());
@@ -293,8 +229,68 @@ public class Bot extends TelegramLongPollingBot {
         try {
             execute(sendMessage);
         } catch (TelegramApiException e) {
-            
+
             e.printStackTrace();
+        }
+    }
+
+    private void acceptCommand(Message message){
+        String messageText = message.getText();
+        String command = "";
+        if (messageText.contains("@")) {
+            command = messageText.split("@")[0];
+            if (!messageText.split("@")[1].equals(getBotUsername()))
+                return;
+        } else {
+            command = messageText;
+        }
+        switch (command) {
+            case "/dick":
+                roll(message, dickService);
+                break;
+            case "/anus":
+                roll(message, anusService);
+                break;
+            case "/fight":
+                if (message.isReply()) {
+                    sendFightSticker(message.getReplyToMessage(), true);
+                    deleteMessage(message);
+                } else
+                    sendFightSticker(message, false);
+                break;
+            case "/test":
+                sendMessage(message, "Я работаю, а твой писюн - нет!");
+                break;
+            case "/topdicks":
+                getDickTop(message);
+                break;
+            case "/topanuses":
+                getAnusTop(message);
+                break;
+            case "/bred":
+                sendRandomThread(message);
+                break;
+            case "/shizik":
+                sendRandomCopypaste(CopypasteType.shizik, message);
+                break;
+            case "/olds":
+                sendRandomCopypaste(CopypasteType.olds, message);
+                break;
+            case "/kolchan":
+                sendRandomCopypaste(CopypasteType.kolchan, message);
+                break;
+            case "/dota":
+                sendRandomCopypaste(CopypasteType.dota, message);
+                break;
+            case "/baby":
+                sendRandomCopypaste(CopypasteType.baby, message);
+                break;
+            case "/webm":
+                sendRandomWebm(message);
+                break;
+            case "/videostats":
+                sendMessage(message, "Количество видео в обработке: " + videoStats);
+                break;
         }
     }
 
@@ -305,17 +301,9 @@ public class Bot extends TelegramLongPollingBot {
             deleteMessage.setMessageId(message.getMessageId());
             execute(deleteMessage);
         } catch (TelegramApiException e) {
-            
+
             e.printStackTrace();
         }
-    }
-
-    enum CopypasteType{
-        baby,
-        dota,
-        kolchan,
-        olds,
-        shizik
     }
 
     private JSONArray getJSONCopyPaste(CopypasteType type){
@@ -348,13 +336,13 @@ public class Bot extends TelegramLongPollingBot {
         try {
             execute(sendMessage);
         } catch (TelegramApiException e) {
-            
+
             e.printStackTrace();
         }
     }
 
     public JSONArray  getBThreads() throws IOException {
-        URL url = new URL(DVACH_URL);
+        URL url = new URL(dvachUrl);
         HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
         InputStream in = new BufferedInputStream(connection.getInputStream());
         JSONObject answer = new JSONObject(Tools.convertStreamToString(in));
@@ -365,46 +353,46 @@ public class Bot extends TelegramLongPollingBot {
 
     public String getWebmUrl(){
         String video = "";
-            try {
-                JSONArray answerArray = getBThreads();
+        try {
+            JSONArray answerArray = getBThreads();
 
-                String threadNumber = "";
-                for (int i = 0; i < answerArray.length(); i++) {
-                    JSONObject postJson = answerArray.getJSONObject(i);
-                    String subject = postJson.getString("subject");
-                    if (subject.toLowerCase().contains("webm thread") || subject.toLowerCase().contains("webm-thread")
-                            || subject.toLowerCase().contains("цуиь thread") || subject.toLowerCase().contains("цуиь-thread")
-                            || subject.toLowerCase().contains("webm тред") || subject.toLowerCase().contains("webm-тред")
-                            || subject.toLowerCase().contains("цуиь тред") || subject.toLowerCase().contains("цуиь-тред")) {
-                        threadNumber = postJson.getString("num");
-                        break;
-                    }
+            String threadNumber = "";
+            for (int i = 0; i < answerArray.length(); i++) {
+                JSONObject postJson = answerArray.getJSONObject(i);
+                String subject = postJson.getString("subject");
+                if (subject.toLowerCase().contains("webm thread") || subject.toLowerCase().contains("webm-thread")
+                        || subject.toLowerCase().contains("цуиь thread") || subject.toLowerCase().contains("цуиь-thread")
+                        || subject.toLowerCase().contains("webm тред") || subject.toLowerCase().contains("webm-тред")
+                        || subject.toLowerCase().contains("цуиь тред") || subject.toLowerCase().contains("цуиь-тред")) {
+                    threadNumber = postJson.getString("num");
+                    break;
                 }
-
-                URL url = new URL("https://2ch.hk/makaba/mobile.fcgi?task=get_thread&board=b&thread="
-                        + threadNumber + "&post=0");
-                HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-                InputStream in = new BufferedInputStream(connection.getInputStream());
-                JSONArray videoPosts = new JSONArray(Tools.convertStreamToString(in));
-                in.close();
-
-                while (video.equals("")) {
-                    int r = Randomizer.getRandomNumberInRange(0, videoPosts.length() - 1);
-                    JSONObject postJson = videoPosts.getJSONObject(r);
-                    JSONArray files = postJson.getJSONArray("files");
-                    if (!files.isEmpty())
-                        video = "https://2ch.hk" + files.getJSONObject(0).getString("path");
-                    if(!video.contains(".webm") && !video.contains(".mp4"))
-                        video = "";
-
-                }
-
-                return video;
-
-            } catch (Exception e) {
-                e.printStackTrace();
             }
-            return "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+
+            URL url = new URL("https://2ch.hk/makaba/mobile.fcgi?task=get_thread&board=b&thread="
+                    + threadNumber + "&post=0");
+            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+            InputStream in = new BufferedInputStream(connection.getInputStream());
+            JSONArray videoPosts = new JSONArray(Tools.convertStreamToString(in));
+            in.close();
+
+            while (video.equals("")) {
+                int r = Randomizer.getRandomNumberInRange(0, videoPosts.length() - 1);
+                JSONObject postJson = videoPosts.getJSONObject(r);
+                JSONArray files = postJson.getJSONArray("files");
+                if (!files.isEmpty())
+                    video = "https://2ch.hk" + files.getJSONObject(0).getString("path");
+                if(!video.contains(".webm") && !video.contains(".mp4"))
+                    video = "";
+
+            }
+
+            return video;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
     }
 
     private int videoStats = 0;
@@ -413,7 +401,7 @@ public class Bot extends TelegramLongPollingBot {
 
         Thread thread = new Thread(() -> {
             String filename = String.valueOf(Randomizer.getRandomNumberInRange(0, 100000));
-          String video = getWebmUrl();
+            String video = getWebmUrl();
             try {
                 if(video.contains(".webm")){
 
@@ -430,7 +418,7 @@ public class Bot extends TelegramLongPollingBot {
                                     new InputStreamReader(p.getInputStream()));
                             String s;
                             while ((s = br.readLine()) != null)
-                                Logs.log(this, s);
+                                log.info(s);
                             p.waitFor();
                             p.destroy();
                         } catch (Exception e) {e.printStackTrace();}
@@ -451,7 +439,7 @@ public class Bot extends TelegramLongPollingBot {
                                 SendMessage sendMessage = new SendMessage().setChatId(message.getChatId());
                                 sendMessage.setReplyToMessageId(message.getMessageId());
                                 sendMessage.setText("Какой-то уебан закодировал видео в vp8...\nПодожди. Мне нужно немного времени, чтоб исправить это.");
-                                                                p = Runtime.getRuntime().exec(
+                                p = Runtime.getRuntime().exec(
                                         "rm -rf /tmp/" + filename + ".mp4");
                                 p.waitFor();
                                 p.destroy();
@@ -468,7 +456,7 @@ public class Bot extends TelegramLongPollingBot {
                                         new InputStreamReader(p.getInputStream()));
                                 String s;
                                 while ((s = br.readLine()) != null)
-                                    Logs.log(this, s);
+                                    log.info(s);
                                 p.waitFor();
                                 p.destroy();
                             } catch (Exception er) {e.printStackTrace();}
@@ -564,7 +552,7 @@ public class Bot extends TelegramLongPollingBot {
                     e.printStackTrace();
                 }
             } catch (Exception e) {
-                
+
                 e.printStackTrace();
             }
         });
@@ -576,7 +564,7 @@ public class Bot extends TelegramLongPollingBot {
         try {
             stickerSet = execute(new GetStickerSet((String) Tools.getRandomValueFormArrayList(fightPacks)));
         } catch (TelegramApiException e) {
-            
+
             e.printStackTrace();
         }
         sendRandomSticker(message, stickerSet, reply);
@@ -592,162 +580,78 @@ public class Bot extends TelegramLongPollingBot {
             try {
                 execute(sendSticker);
             } catch (TelegramApiException e) {
-                
+
                 e.printStackTrace();
             }
         }
     }
 
-    public void startCommand(Message message){
-        try(Session session = DatabaseManager.getSession()) {
-            SendMessage sendMessage = new SendMessage().setChatId(message.getChatId());
-            Chats chat = null;
-            try {
-                chat = (Chats) session.createQuery("from Chats as c where c.chatId = :chat").
-                        setParameter("chat", message.getChatId()).list().get(0);
-            }catch (Exception e){
-                //e.printStackTrace();
-            }
-            if(chat == null){
-                session.beginTransaction();
-                sendMessage.setText("Ну что? Готовы к ещё одной порции подливы?");
-                chat = new Chats();
-                chat.setChatId(message.getChatId());
-                chat.setChatName(message.getChat().getTitle());
-                session.save(chat);
-                session.getTransaction().commit();
-            } else{
-                sendMessage.setText("Ваш чат уже зарегистрирован!");
-            }
-            registerUser(message, chat);
-            try {
-                execute(sendMessage);
-            } catch (TelegramApiException e) {
-                
-                e.printStackTrace();
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-    }
-
-    public boolean registerUser(Message message, Chats chat){
-        try(Session session = DatabaseManager.getSession()) {
-            if(chat == null){
-                try {
-                    chat = (Chats) session.createQuery("from Chats as c where c.chatId = :chat").
-                            setParameter("chat", message.getChatId()).list().get(0);
-                }catch (Exception e){
-                    return false;
-                    //e.printStackTrace();
-                }
-            }
-            Users user = null;
-            try {
-                user = (Users) session.createQuery("from Users as c where c.userId = :user AND c.chatId = :chat").
-                        setParameter("user", message.getFrom().getId()).
-                        setParameter("chat", chat.getId()).list().get(0);
-            }catch (Exception e){
-               // e.printStackTrace();
-            }
-            if(user == null){
-                session.beginTransaction();
-                user = new Users();
-                user.setChat(chat);
-                user.setUserId(message.getFrom().getId());
-                user.setUserName(message.getFrom().getUserName());
-                session.save(user);
-                session.getTransaction().commit();
-            }
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-        return true;
-    }
-
-    private Chats getChatById(Long id){
-        Chats chat = null;
-        try(Session session = DatabaseManager.getSession()) {
-            chat = (Chats) session.createQuery("from Chats as c where c.chatId = :chat").
-                    setParameter("chat", id).list().get(0);
-        }catch (Exception e){
-            //e.printStackTrace();
-        }
+    public Chats registerChat(Message message) {
+        Chats chat = new Chats();
+        chat.setChatId(message.getChatId());
+        chat.setChatName(message.getChat().getTitle());
+        chat = chatRepository.save(chat);
+        registerUser(message, chat);
         return chat;
     }
 
-    public String getTopDicks(Chats c){
-        StringBuilder message = new StringBuilder();
-        try(Session session = DatabaseManager.getSession()) {
-            Chats chat = session.get(Chats.class, c.getId());
-            int number = 1;
-            ArrayList<Users> users = new ArrayList<>(chat.getUsers());
-            ArrayList<Dicks> dicks = new ArrayList<>();
-            for (Users user : users) {
-                try {
-                    dicks.add(new ArrayList<>(user.getDicks()).get(0));
-                }catch (Exception ignored){ }
-            }
-            try {
-                dicks.sort((d1, d2) -> Integer.compare(d2.getSize(), d1.getSize()));
-            }catch (Exception ignored){}
-            for (Dicks dick : dicks) {
-                message.append(number).append(". ");
-                message.append(dick.getUsers().getUserName());
-                message.append(" - ").append(dick.getSize()).append("см;\n");
-                number++;
-            }
-        }catch (Exception e){
-           // e.printStackTrace();
-        }
-        if (message.toString().equals(""))
-            message = new StringBuilder("Никто ещё не роллил хуй");
-        else
-            message.insert(0, "Топ писюнов: \n\n");
-        return message.toString();
+    public Users registerUser(Message message, Chats chat) {
+        if (chat == null)
+            chat = chatRepository.getByChatId(message.getChatId());
+        Users user = new Users();
+        user.setChat(chat);
+        user.setUserId(message.getFrom().getId());
+        user.setUserName(message.getFrom().getUserName());
+        return userRepository.save(user);
     }
 
-    public void rollDick(Message message){
-        SendMessage sendMessage = new SendMessage().setChatId(message.getChatId());
-        Users user = null;
-        Chats chat = null;
-        try(Session session = DatabaseManager.getSession()) {
-            try {
-                chat = (Chats) session.createQuery("from Chats as c where c.chatId = :chat").
-                        setParameter("chat", message.getChatId()).list().get(0);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            try {
-                user = (Users) session.createQuery("from Users as c where c.userId = :user AND c.chatId = :chat").
-                        setParameter("user", message.getFrom().getId()).
-                        setParameter("chat", chat.getId()).list().get(0);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            String mess = new String(DickRoller.Holder.getInstance().roll(user, session).getBytes(),
+
+
+    private void roll(Message message, Roller roller) {
+        try {
+            SendMessage sendMessage = new SendMessage().setChatId(message.getChatId());
+
+            Chats chat = chatRepository.getByChatId(message.getChatId());
+            if(chat == null)
+                chat = registerChat(message);
+            Users user = userRepository.getByChatIdAndUserId(chat.getId(), message.getFrom().getId());
+            if(user == null)
+                user = registerUser(message, chat);
+
+            String mess = new String(roller.roll(user).getBytes(),
                     StandardCharsets.UTF_8);
             sendMessage.setReplyToMessageId(message.getMessageId());
             sendMessage.setText(mess);
             sendMessage.enableMarkdown(true);
-        }
-        try {
             execute(sendMessage);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
+        }catch (Exception e){
+            log.trace("Error on rollDick: {}", e.getStackTrace());
         }
     }
 
-    //Bot name
+    private void getDickTop(Message message){
+        Chats chat = chatRepository.getByChatId(message.getChatId());
+        if(chat == null)
+            sendMessage(message, "Никто ещё ничего не роллил");
+        sendMessage(message, dickService.getTop(userRepository.getAllByChat(chat)));
+    }
+
+    private void getAnusTop(Message message){
+        Chats chat = chatRepository.getByChatId(message.getChatId());
+        if(chat == null)
+            sendMessage(message, "Никто ещё ничего не роллил");
+        sendMessage(message, anusService.getTop(userRepository.getAllByChat(chat)));
+    }
+
     @Override
     public String getBotUsername() {
-        // return "spodlivoi_bot";
-	return System.getProperty("botname");
+        return botUserName;
     }
 
-    //Bot token from @
     @Override
     public String getBotToken() {
-        return System.getProperty("token");
+        return botToken;
     }
+
+
 }

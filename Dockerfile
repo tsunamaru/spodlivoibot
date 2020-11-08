@@ -5,7 +5,7 @@ ARG TOKEN
 ARG BOTNAME
 ARG TZ
 
-RUN apk add --no-cache \ 
+RUN apk add --no-cache \
         ffmpeg \
         tzdata \
     && \

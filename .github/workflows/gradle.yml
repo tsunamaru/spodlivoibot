@@ -15,10 +15,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Install JDK 11
-      run: wget -O- https://apt.corretto.aws/corretto.key | sudo apt-key add - && sudo add-apt-repository 'deb https://apt.corretto.aws stable main' &&  sudo apt-get update && sudo apt-get install -y java-11-amazon-corretto-jdk
-    - name: Install Gradle 6.3
-      run: wget https://downloads.gradle-dn.com/distributions/gradle-6.3-bin.zip && unzip gradle-6.3-bin.zip
-    - name: Build project
-      run: ./gradle-6.3/bin/gradle build --no-daemon
+      - uses: actions/checkout@v2
+      - name: Autobuild
+        run: docker-compose run --rm gradle
+      # - name: Install Gradle 6.3
+      #   run: wget https://downloads.gradle-dn.com/distributions/gradle-6.3-bin.zip && unzip gradle-6.3-bin.zip
+      # - name: Build project
+      #   run: ./gradle-6.3/bin/gradle build --no-daemon

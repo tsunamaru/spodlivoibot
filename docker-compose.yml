@@ -2,26 +2,24 @@ version: '3'
 
 # Build: docker-compose run --rm gradle
 # Run: docker-compose up -d spodlivoi
-services: 
+services:
     gradle:
         image: gradle:6.3-jdk11
         env_file:
             - .env
-        volumes: 
+        volumes:
             - ./:/opt/spodlivoi
-        user: ${RUNAS}
-        command: gradle build --no-daemon -g gradle-user-home
+        # user: ${RUNAS}
+        command: gradle build --no-daemon
         working_dir: /opt/spodlivoi
-    
+
     spodlivoi:
         image: spodlivoibot
-        env_file: 
+        env_file:
             - .env
         build:
-            args: 
-                - TOKEN=${TOKEN}
+            args:
                 - RUNAS=${RUNAS}
-                - BOTNAME=${BOTNAME}
                 - TZ=${TZ}
             dockerfile: ./Dockerfile
             context: .
