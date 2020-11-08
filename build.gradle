@@ -33,8 +33,7 @@ repositories {
 
 dependencies {
 
-    compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.32.3.1'
-    compile group: 'com.zsoltfabok', name: 'sqlite-dialect', version: '1.0'
+    compile group: 'org.postgresql', name: 'postgresql', version: '42.2.18'
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-log4j2'

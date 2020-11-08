@@ -1,8 +1,6 @@
 FROM amazoncorretto:11-alpine
 
 ARG RUNAS
-ARG TOKEN
-ARG BOTNAME
 ARG TZ
 
 RUN apk add --no-cache \
@@ -16,6 +14,5 @@ RUN apk add --no-cache \
     chown ${RUNAS} /opt/spodlivoi
 
 ENV LANG C.UTF-8
-ENV JAVA_HOME=/usr/lib/jvm/default-jvm/jre
 
-CMD java -Xms256m -Xmx512m -Dfile.encoding=UTF-8 -Dtoken=${TOKEN} -Dbotname=${BOTNAME} -jar spodlivoi.jar
+CMD java -Xms256m -Xmx512m -Dfile.encoding=UTF-8 -jar spodlivoi.jar

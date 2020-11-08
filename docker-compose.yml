@@ -33,3 +33,19 @@ services:
         stdin_open: true
         restart: always
         # network_mode: host
+        depends_on:
+            - db
+
+    db:
+        image: postgres:13-alpine
+        environment:
+            POSTGRES_PASSWORD: aiQuuo0eelaequohNooQuaa3mahShe
+            POSTGRES_USER: spodlivoi
+            POSTGRES_DB: spodlivoi
+            PGDATA: /var/lib/postgresql/data/pgdata
+        volumes:
+          - spodlivoidb:/var/lib/postgresql/data/pgdata
+        restart: always
+
+volumes:
+  spodlivoidb:
