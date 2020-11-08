@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Autobuild
-        run: docker-compose run --rm gradle
+        run: cp .env.example .env && docker-compose run --rm gradle
       # - name: Install Gradle 6.3
       #   run: wget https://downloads.gradle-dn.com/distributions/gradle-6.3-bin.zip && unzip gradle-6.3-bin.zip
       # - name: Build project
