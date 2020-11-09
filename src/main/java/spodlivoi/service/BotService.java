@@ -87,19 +87,19 @@ public class BotService extends TelegramLongPollingBot {
 
     @PostConstruct
     public void initialization() throws IOException {
-        InputStream insultsStream = new FileInputStream(babyFile.getFile());
+        InputStream insultsStream = babyFile.getInputStream();
         JSONObject insultsJson = new JSONObject(Tools.convertStreamToString(insultsStream));
         baby = insultsJson.getJSONArray("baby");
-        insultsStream = new FileInputStream(dotaFile.getFile());
+        insultsStream = dotaFile.getInputStream();
         insultsJson = new JSONObject(Tools.convertStreamToString(insultsStream));
         dota = insultsJson.getJSONArray("dota");
-        insultsStream = new FileInputStream(kolchanFile.getFile());
+        insultsStream = kolchanFile.getInputStream();
         insultsJson = new JSONObject(Tools.convertStreamToString(insultsStream));
         kolchan = insultsJson.getJSONArray("kolchan");
-        insultsStream = new FileInputStream(oldsFile.getFile());
+        insultsStream = oldsFile.getInputStream();
         insultsJson = new JSONObject(Tools.convertStreamToString(insultsStream));
         olds = insultsJson.getJSONArray("olds");
-        insultsStream = new FileInputStream(shizikFile.getFile());
+        insultsStream = shizikFile.getInputStream();
         insultsJson = new JSONObject(Tools.convertStreamToString(insultsStream));
         shizik = insultsJson.getJSONArray("shizik");
         article3.setTitle("Ребёнок");
