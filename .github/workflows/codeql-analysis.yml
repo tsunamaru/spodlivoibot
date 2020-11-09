@@ -53,8 +53,17 @@ jobs:
 
       # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
       # If this step fails, then you should remove it and run the build manually (see below)
-      - name: Autobuild
-        run:  cp .env.example .env && docker-compose run --rm gradle
+      - uses: actions/setup-java@v1
+        with:
+          java-version: '11'
+          java-package: jdk
+          architecture: x64
+      
+      - name: Install Gradle 6.3
+        run: wget https://downloads.gradle-dn.com/distributions/gradle-6.3-bin.zip && unzip gradle-6.3-bin.zip
+      
+      - name: Run Gradle
+        run: ./gradle-6.3/bin/gradle build --no-daemon
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v1
