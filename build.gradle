@@ -1,0 +1,59 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+}
+plugins {
+    id 'org.springframework.boot' version '2.3.2.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+    id 'java'
+}
+
+tasks.withType(JavaCompile) {
+    sourceCompatibility = 11
+    targetCompatibility = 11
+    options.encoding = 'UTF-8'
+}
+
+configurations {
+    all {
+        implementation {
+            exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+        }
+        testImplementation {
+            exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+
+dependencies {
+
+    compile group: 'org.postgresql', name: 'postgresql', version: '42.2.18'
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-log4j2'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    compile('com.github.xabgesagtx:telegram-spring-boot-starter:0.22')
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
+    testImplementation 'org.springframework.security:spring-security-test'
+
+
+}
+
+test {
+    useJUnitPlatform {
+        excludeTags 'integration'
+    }
+}
+

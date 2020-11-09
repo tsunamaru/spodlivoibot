@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+
+    spodlivoi:
+        image: github.com/tsunamaru/spodlivoibot
+        environment:
+            TELEGRAM_BOT_TOKEN: 866647031:AAHgSWpqnTdST8bUmDTDtOnPfIeaLdH4_kE
+            TELEGRAM_BOT_USERNAME: spodlivoi_bot
+            SPRING_DATASOURCE_USERNAME: spodlivoi 
+            SPRING_DATASOURCE_PASSWORD: aiQuuo0eelaequohNooQuaa3mahShe
+            SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/spodlivoi
+            LOGGING_FILE_NAME: /var/log/spodlivoi.log
+            SPRING_JPA_HIBERNATE_DDL-AUTO: update
+        build:
+            dockerfile: ./Dockerfile
+            context: .
+        tty: true
+        stdin_open: true
+        restart: always
+        volumes:
+          - spodlivoilogs:/var/log
+        depends_on:
+            - db
+
+    db:
+        image: postgres:13-alpine
+        environment:
+            POSTGRES_PASSWORD: aiQuuo0eelaequohNooQuaa3mahShe
+            POSTGRES_USER: spodlivoi
+            POSTGRES_DB: spodlivoi
+            PGDATA: /var/lib/postgresql/data/pgdata
+        volumes:
+          - spodlivoidb:/var/lib/postgresql/data/pgdata
+        restart: always
+
+volumes:
+  spodlivoidb:
+  spodlivoilogs: 
