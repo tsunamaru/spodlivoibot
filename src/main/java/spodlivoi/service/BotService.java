@@ -23,6 +23,7 @@ import org.telegram.telegrambots.meta.api.objects.inlinequery.inputmessageconten
 import org.telegram.telegrambots.meta.api.objects.inlinequery.result.InlineQueryResult;
 import org.telegram.telegrambots.meta.api.objects.inlinequery.result.InlineQueryResultArticle;
 import org.telegram.telegrambots.meta.api.objects.inlinequery.result.InlineQueryResultVideo;
+import org.telegram.telegrambots.meta.api.objects.inlinequery.result.cached.InlineQueryResultCachedSticker;
 import org.telegram.telegrambots.meta.api.objects.stickers.Sticker;
 import org.telegram.telegrambots.meta.api.objects.stickers.StickerSet;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -83,7 +84,12 @@ public class BotService extends TelegramLongPollingBot {
     @Autowired
     private AnusService anusService;
 
-
+    private final InlineQueryResultArticle article = new InlineQueryResultArticle();
+    private final InlineQueryResultArticle article2 = new InlineQueryResultArticle();
+    private final InlineQueryResultArticle article3 = new InlineQueryResultArticle();
+    private final InlineQueryResultArticle article4 = new InlineQueryResultArticle();
+    private final InlineQueryResultArticle article5 = new InlineQueryResultArticle();
+    private final InlineQueryResultArticle repairArticle = new InlineQueryResultArticle();
 
     @PostConstruct
     public void initialization() throws IOException {
@@ -124,9 +130,6 @@ public class BotService extends TelegramLongPollingBot {
         repairArticle.setInputMessageContent(new InputTextMessageContent().setMessageText(REPAIR_TEXT_MESSAGE)
                 .setParseMode(ParseMode.HTML));
 
-        randomWeb.setId("1");
-        randomWeb.setDescription("Рандомный Webm из /b");
-        randomWeb.setTitle("цуим");
         log.info("Бот запущен");
     }
 
@@ -151,6 +154,10 @@ public class BotService extends TelegramLongPollingBot {
                     if(update.getInlineQuery().getQuery().equals("webm") ||
                             update.getInlineQuery().getQuery().equals("video")){
                         List<InlineQueryResult> results = new ArrayList<>();
+                        InlineQueryResultVideo randomWeb = new InlineQueryResultVideo();
+                        randomWeb.setId("1");
+                        randomWeb.setDescription("Рандомный Webm из /b");
+                        randomWeb.setTitle("цуим");
 
                         String video = getWebmUrl();
                         if(video.contains(".webm")){
@@ -170,6 +177,17 @@ public class BotService extends TelegramLongPollingBot {
                             randomWeb.setMimeType("video/mp4");
                             results.add(randomWeb);
                         }
+                        answerInlineQuery = new AnswerInlineQuery().setCacheTime(0)
+                                .setPersonal(true)
+                                .setResults(results)
+                                .setInlineQueryId(update.getInlineQuery().getId());
+                    } else if(update.getInlineQuery().getQuery().toLowerCase().matches("fight") ||
+                            update.getInlineQuery().getQuery().toLowerCase().matches("боевая")) {
+                        List<InlineQueryResult> results = new ArrayList<>();
+                        InlineQueryResultCachedSticker q = new InlineQueryResultCachedSticker();
+                        q.setId("1");
+                        q.setStickerFileId(getSticker().getFileId());
+                        results.add(q);
                         answerInlineQuery = new AnswerInlineQuery().setCacheTime(0)
                                 .setPersonal(true)
                                 .setResults(results)
@@ -207,18 +225,9 @@ public class BotService extends TelegramLongPollingBot {
                 thread.start();
             }
         } catch (Exception e){
-
             log.error("Error: ", e);
         }
     }
-
-    InlineQueryResultArticle article = new InlineQueryResultArticle();
-    InlineQueryResultArticle article2 = new InlineQueryResultArticle();
-    InlineQueryResultArticle article3 = new InlineQueryResultArticle();
-    InlineQueryResultArticle article4 = new InlineQueryResultArticle();
-    InlineQueryResultArticle article5 = new InlineQueryResultArticle();
-    InlineQueryResultArticle repairArticle = new InlineQueryResultArticle();
-    InlineQueryResultVideo randomWeb = new InlineQueryResultVideo();
 
     private void sendMessage(Message message, String text){
         SendMessage sendMessage = new SendMessage().setChatId(message.getChatId());
@@ -553,28 +562,43 @@ public class BotService extends TelegramLongPollingBot {
         thread.start();
     }
 
-    private void sendFightSticker(Message message, boolean reply) {
+    private StickerSet getFightStickers() {
         StickerSet stickerSet = null;
         try {
             stickerSet = execute(new GetStickerSet((String) Tools.getRandomValueFormArrayList(fightPacks)));
         } catch (TelegramApiException e) {
             log.error("Error: ", e);
         }
-        sendRandomSticker(message, stickerSet, reply);
+       return stickerSet;
     }
 
-    private void sendRandomSticker(Message message, StickerSet stickerSet, boolean reply) {
-        if(stickerSet != null) {
-            SendSticker sendSticker = new SendSticker();
-            sendSticker.setChatId(message.getChatId());
-            if(reply)
-                sendSticker.setReplyToMessageId(message.getMessageId());
-            sendSticker.setSticker(((Sticker) Tools.getRandomValueFormArrayList(stickerSet.getStickers())).getFileId());
-            try {
-                execute(sendSticker);
-            } catch (TelegramApiException e) {
-                log.error("Error: ", e);
-            }
+    private Sticker getSticker(){
+        return getSticker(getFightStickers());
+    }
+
+    private Sticker getSticker(StickerSet stickerSet){
+        if(stickerSet == null) {
+            return null;
+        }
+        return (Sticker) Tools.getRandomValueFormArrayList(stickerSet.getStickers());
+    }
+
+    private void sendFightSticker(Message message, boolean reply){
+        sendSticker(message, getSticker(), reply);
+    }
+
+    private void sendSticker(Message message, Sticker sticker, boolean reply) {
+        if(sticker == null)
+            return;
+        SendSticker sendSticker = new SendSticker();
+        sendSticker.setChatId(message.getChatId());
+        if(reply)
+            sendSticker.setReplyToMessageId(message.getMessageId());
+        sendSticker.setSticker(sticker.getFileId());
+        try {
+            execute(sendSticker);
+        } catch (TelegramApiException e) {
+            log.error("Error: ", e);
         }
     }
 
