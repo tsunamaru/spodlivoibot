@@ -113,6 +113,7 @@ public class DickServiceImpl implements DickService {
     public String getTop(List<Users> users) {
         StringBuilder message = new StringBuilder();
         int number = 1;
+        users.removeIf(u -> u.getDick() == null);
         users.sort((d1, d2) -> Integer.compare(d2.getDick().getSize(), d1.getDick().getSize()));
         for(Users user : users){
             message.append(number).append(". ");

@@ -82,6 +82,7 @@ public class AnusServiceImpl implements AnusService {
     public String getTop(List<Users> users) {
         StringBuilder message = new StringBuilder();
         int number = 1;
+        users.removeIf(u -> u.getAnus() == null);
         users.sort((d1, d2) -> Integer.compare(d2.getAnus().getSize(), d1.getAnus().getSize()));
         for(Users user : users){
             message.append(number).append(". ");
