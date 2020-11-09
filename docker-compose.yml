@@ -1,28 +1,31 @@
 version: '3'
 
-# Build: docker-compose run --rm gradle
-# Run: docker-compose up -d spodlivoi
 services:
 
     spodlivoi:
-        image: spodlivoibot
+        image: github.com/tsunamaru/spodlivoibot
         environment:
-            TELEGRAM_BOT_TOKEN: 
-            TELEGRAM_BOT_USERNAME: spodlivoi_bot
+            TELEGRAM_BOT_TOKEN: 866647031:AAHgSWpqnTdST8bUmDTDtOnPfIeaLdH4_kE	# replace with your token
+            TELEGRAM_BOT_USERNAME: spodlivoi_bot								# replace with your bot username
+            SPRING_DATASOURCE_USERNAME: spodlivoi 
+            SPRING_DATASOURCE_PASSWORD: aiQuuo0eelaequohNooQuaa3mahShe			# database password, replace at your wish
+            SPRING_JPA_HIBERNATE.DDL-AUTO: create
+            LOGGING_FILE_NAME: /var/log/spodlivoi.log
         build:
             dockerfile: ./Dockerfile
             context: .
         tty: true
         stdin_open: true
-        # restart: always
-        # network_mode: host
+        restart: always
+        volumes:
+          - spodlivoilogs:/var/log
         depends_on:
             - db
 
     db:
         image: postgres:13-alpine
         environment:
-            POSTGRES_PASSWORD: aiQuuo0eelaequohNooQuaa3mahShe
+            POSTGRES_PASSWORD: aiQuuo0eelaequohNooQuaa3mahShe					# database password, should fit SPRING_DATASOURCE_PASSWORD below
             POSTGRES_USER: spodlivoi
             POSTGRES_DB: spodlivoi
             PGDATA: /var/lib/postgresql/data/pgdata
@@ -32,3 +35,4 @@ services:
 
 volumes:
   spodlivoidb:
+  spodlivoilogs: 
