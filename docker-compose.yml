@@ -7,7 +7,7 @@ services:
     spodlivoi:
         image: spodlivoibot
         environment:
-            TELEGRAM_BOT_TOKEN: 866647031:AAHgSWpqnTdST8bUmDTDtOnPfIeaLdH4_kE
+            TELEGRAM_BOT_TOKEN: 
             TELEGRAM_BOT_USERNAME: spodlivoi_bot
         build:
             dockerfile: ./Dockerfile
