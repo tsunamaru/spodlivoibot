@@ -201,16 +201,14 @@ public class BotService extends TelegramLongPollingBot {
                         execute(answerInlineQuery);
                     } catch (Exception e) {
 
-                        e.printStackTrace();
+                        log.error("Error: " + e);
                     }
                 });
                 thread.start();
-            } else if (update.hasEditedMessage()) {
-                // sendMessage(update.getEditedMessage(), "Анус себе отредактируй");
             }
         } catch (Exception e){
 
-            e.printStackTrace();
+            log.error("Error: " + e);
         }
     }
 
@@ -229,14 +227,13 @@ public class BotService extends TelegramLongPollingBot {
         try {
             execute(sendMessage);
         } catch (TelegramApiException e) {
-
-            e.printStackTrace();
+            log.error("Error: " + e);
         }
     }
 
     private void acceptCommand(Message message){
         String messageText = message.getText();
-        String command = "";
+        String command;
         if (messageText.contains("@")) {
             command = messageText.split("@")[0];
             if (!messageText.split("@")[1].equals(getBotUsername()))
@@ -301,8 +298,7 @@ public class BotService extends TelegramLongPollingBot {
             deleteMessage.setMessageId(message.getMessageId());
             execute(deleteMessage);
         } catch (TelegramApiException e) {
-
-            e.printStackTrace();
+            log.error("Error: " + e);
         }
     }
 
@@ -336,8 +332,7 @@ public class BotService extends TelegramLongPollingBot {
         try {
             execute(sendMessage);
         } catch (TelegramApiException e) {
-
-            e.printStackTrace();
+            log.error("Error: " + e);
         }
     }
 
@@ -390,7 +385,7 @@ public class BotService extends TelegramLongPollingBot {
             return video;
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error: " + e);
         }
         return "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
     }
@@ -421,10 +416,10 @@ public class BotService extends TelegramLongPollingBot {
                                 log.info(s);
                             p.waitFor();
                             p.destroy();
-                        } catch (Exception e) {e.printStackTrace();}
+                        } catch (Exception e) {log.error("Error: " + e);}
 
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        log.error("Error: " + e);
                     }
                     video = "/tmp/" + filename + ".mp4";
                     SendVideo sendVideo = new SendVideo().setChatId(message.getChatId());
@@ -459,7 +454,7 @@ public class BotService extends TelegramLongPollingBot {
                                     log.info(s);
                                 p.waitFor();
                                 p.destroy();
-                            } catch (Exception er) {e.printStackTrace();}
+                            } catch (Exception er) {log.error("Error: " + e);}
                             sendVideo = new SendVideo().setChatId(message.getChatId());
                             sendVideo.setReplyToMessageId(message.getMessageId());
                             sendVideo.setVideo(new File(video));
@@ -478,7 +473,7 @@ public class BotService extends TelegramLongPollingBot {
                         p.waitFor();
                         p.destroy();
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        log.error("Error: " + e);
                     }
                 } else {
                     SendVideo sendVideo = new SendVideo().setChatId(message.getChatId());
@@ -487,7 +482,7 @@ public class BotService extends TelegramLongPollingBot {
                     execute(sendVideo);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Error: " + e);
             }
         });
         thread.start();
@@ -495,7 +490,7 @@ public class BotService extends TelegramLongPollingBot {
 
     public void sendRandomThread(final Message message){
         Thread thread = new Thread(() -> {
-            String post = "", photo = "";
+            String post, photo = "";
             try {
 
                 JSONArray answerArray = getBThreads();
@@ -549,11 +544,10 @@ public class BotService extends TelegramLongPollingBot {
                             execute(sendMessage);
                     }
                 } catch (TelegramApiException e) {
-                    e.printStackTrace();
+                    log.error("Error: " + e);
                 }
             } catch (Exception e) {
-
-                e.printStackTrace();
+                log.error("Error: " + e);
             }
         });
         thread.start();
@@ -564,8 +558,7 @@ public class BotService extends TelegramLongPollingBot {
         try {
             stickerSet = execute(new GetStickerSet((String) Tools.getRandomValueFormArrayList(fightPacks)));
         } catch (TelegramApiException e) {
-
-            e.printStackTrace();
+            log.error("Error: " + e);
         }
         sendRandomSticker(message, stickerSet, reply);
     }
@@ -580,8 +573,7 @@ public class BotService extends TelegramLongPollingBot {
             try {
                 execute(sendSticker);
             } catch (TelegramApiException e) {
-
-                e.printStackTrace();
+                log.error("Error: " + e);
             }
         }
     }
@@ -625,7 +617,7 @@ public class BotService extends TelegramLongPollingBot {
             sendMessage.enableMarkdown(true);
             execute(sendMessage);
         }catch (Exception e){
-            log.trace("Error on rollDick: {}", e.getStackTrace());
+            log.error("Error: " + e);
         }
     }
 

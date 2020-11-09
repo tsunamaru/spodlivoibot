@@ -8,7 +8,6 @@ import spodlivoi.entity.Users;
 import spodlivoi.repository.AnusRepository;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -27,7 +26,7 @@ public class AnusServiceImpl implements AnusService {
             try {
                 anus = user.getAnus();
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Error: " + e);
             }
             if (anus == null) {
                 anus = new Anus();
@@ -74,7 +73,7 @@ public class AnusServiceImpl implements AnusService {
 
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error: " + e);
         }
         return "Произошла какая-то ошибка...";
     }
@@ -83,21 +82,15 @@ public class AnusServiceImpl implements AnusService {
     public String getTop(List<Users> users) {
         StringBuilder message = new StringBuilder();
         int number = 1;
-        ArrayList<Anus> rollBases = new ArrayList<>();
-        for(Users user : users)
-            rollBases.add(user.getAnus());
-        try {
-            rollBases.sort((d1, d2) -> Integer.compare(d2.getSize(), d1.getSize()));
-        } catch (Exception ignored) {
-        }
-        for (Anus rollBase : rollBases) {
+        users.sort((d1, d2) -> Integer.compare(d2.getAnus().getSize(), d1.getAnus().getSize()));
+        for(Users user : users){
             message.append(number).append(". ");
-            message.append(rollBase.getUser().getUserName());
-            message.append(" - ").append(rollBase.getSize()).append("см;\n");
+            message.append(user.getUserName());
+            message.append(" - ").append(user.getAnus().getSize()).append("см;\n");
             number++;
         }
         if (message.toString().equals(""))
-            message = new StringBuilder("Никто ещё не роллил anal");
+            message = new StringBuilder("Никто ещё не роллил писюн");
         else
             message.insert(0, "Топ anal'ов:\n\n");
         return message.toString();

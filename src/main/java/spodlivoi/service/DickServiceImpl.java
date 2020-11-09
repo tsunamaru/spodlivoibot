@@ -1,5 +1,6 @@
 package spodlivoi.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import spodlivoi.entity.Dicks;
@@ -8,10 +9,10 @@ import spodlivoi.repository.DickRepository;
 import spodlivoi.utils.Randomizer;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Component
+@Slf4j
 public class DickServiceImpl implements DickService {
 
     @Autowired
@@ -26,7 +27,7 @@ public class DickServiceImpl implements DickService {
             try {
                 dick = user.getDick();
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Error: " + e);
             }
             if (dick == null) {
                 dick = new Dicks();
@@ -103,7 +104,7 @@ public class DickServiceImpl implements DickService {
             }
 
         }catch (Exception e){
-            e.printStackTrace();
+            log.error("Error: " + e);
         }
         return "Произошла какая-то ошибка...";
     }
@@ -112,18 +113,11 @@ public class DickServiceImpl implements DickService {
     public String getTop(List<Users> users) {
         StringBuilder message = new StringBuilder();
         int number = 1;
-
-        ArrayList<Dicks> rollBases = new ArrayList<>();
-        for(Users user : users)
-            rollBases.add(user.getDick());
-        try {
-            rollBases.sort((d1, d2) -> Integer.compare(d2.getSize(), d1.getSize()));
-        } catch (Exception ignored) {
-        }
-        for (Dicks rollBase : rollBases) {
+        users.sort((d1, d2) -> Integer.compare(d2.getDick().getSize(), d1.getDick().getSize()));
+        for(Users user : users){
             message.append(number).append(". ");
-            message.append(rollBase.getUser().getUserName());
-            message.append(" - ").append(rollBase.getSize()).append("см;\n");
+            message.append(user.getUserName());
+            message.append(" - ").append(user.getDick().getSize()).append("см;\n");
             number++;
         }
         if (message.toString().equals(""))
