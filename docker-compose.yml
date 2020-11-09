@@ -3,33 +3,32 @@ version: '3'
 # Build: docker-compose run --rm gradle
 # Run: docker-compose up -d spodlivoi
 services:
-    gradle:
-        image: gradle:6.3-jdk11
-        env_file:
-            - .env
-        volumes:
-            - ./:/opt/spodlivoi
-        user: ${RUNAS}
-        command: gradle build --no-daemon -g gradle-user-home
-        working_dir: /opt/spodlivoi
 
     spodlivoi:
         image: spodlivoibot
-        env_file:
-            - .env
+        environment:
+            TELEGRAM_BOT_TOKEN: 
+            TELEGRAM_BOT_USERNAME: spodlivoi_bot
         build:
-            args:
-                - RUNAS=${RUNAS}
-                - TZ=${TZ}
             dockerfile: ./Dockerfile
             context: .
-        volumes:
-            - ./build/libs/spodlivoi.jar:/opt/spodlivoi/spodlivoi.jar:ro
-            - ./db:/opt/spodlivoi/db
-        user: ${RUNAS}
-        working_dir: /opt/spodlivoi
-        container_name: spodlivoibot
         tty: true
         stdin_open: true
-        restart: always
+        # restart: always
         # network_mode: host
+        depends_on:
+            - db
+
+    db:
+        image: postgres:13-alpine
+        environment:
+            POSTGRES_PASSWORD: aiQuuo0eelaequohNooQuaa3mahShe
+            POSTGRES_USER: spodlivoi
+            POSTGRES_DB: spodlivoi
+            PGDATA: /var/lib/postgresql/data/pgdata
+        volumes:
+          - spodlivoidb:/var/lib/postgresql/data/pgdata
+        restart: always
+
+volumes:
+  spodlivoidb:
