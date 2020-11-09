@@ -19,7 +19,7 @@ public class Anus {
     @Column(name = "last_measurement", nullable = false)
     private LocalDateTime lastMeasurement;
     @OneToOne
-    @JoinColumn(name = "user", referencedColumnName = "id", nullable = false)
+    @JoinColumn(name = "polzovatel", referencedColumnName = "id", nullable = false)
     private Users user;
 
 }

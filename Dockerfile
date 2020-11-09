@@ -1,18 +1,23 @@
+FROM gradle:6.3-jdk11 as builder
+
+COPY ./src /workspace/src
+COPY ./build.gradle /workspace/build.gradle
+WORKDIR /workspace
+
+RUN gradle assemble --no-daemon
+
 FROM amazoncorretto:11-alpine
 
-ARG RUNAS
-ARG TZ
+COPY --from=builder /workspace/build/libs/*.jar /workspace/spodlivoi.jar
+ARG TZ="Europe/Moscow"
 
 RUN apk add --no-cache \
         ffmpeg \
         tzdata \
     && \
     cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
-    echo "${TZ}" > /etc/timezone && \
-    mkdir -p /opt/spodlivoi && \
-    chmod 755 /opt/spodlivoi && \
-    chown ${RUNAS} /opt/spodlivoi
+    echo "${TZ}" > /etc/timezone
 
 ENV LANG C.UTF-8
-
+WORKDIR /workspace
 CMD java -Xms256m -Xmx512m -Dfile.encoding=UTF-8 -jar spodlivoi.jar
