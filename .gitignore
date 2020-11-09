@@ -1,10 +1,7 @@
 /*
 !/src
-!/db/.gitkeep
 !/.gitignore
 !/build.gradle
-!/settings.gradle
 !/docker-compose.yml
 !/Dockerfile
-!/.env.example
 !/README.md
