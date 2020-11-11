@@ -16,7 +16,7 @@ env:
 
 jobs:
 
-  push:
+  build:
 
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
@@ -51,3 +51,22 @@ jobs:
 
           docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
+
+  deploy:
+    runs-on: self-hosted
+    needs: build
+    steps:
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+
+      - name: Pull and deploy
+        run: |
+          wget -O -L https://raw.githubusercontent.com/${{ github.repository }}/master/docker-compose.yml
+
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_BOT_USERNAME=${{ secrets.TELEGRAM_BOT_USERNAME }}
+
+          docker-compose pull
+          docker-compose down || true
+          docker compose up -d
