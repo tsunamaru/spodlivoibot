@@ -61,7 +61,7 @@ jobs:
 
       - name: Pull and deploy
         run: |
-          wget -O -L https://raw.githubusercontent.com/${{ github.repository }}/master/docker-compose.yml
+          curl -O -L https://raw.githubusercontent.com/${{ github.repository }}/master/docker-compose.yml
 
           POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
           TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
