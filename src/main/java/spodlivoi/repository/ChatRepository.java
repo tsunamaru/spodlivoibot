@@ -8,6 +8,7 @@ import spodlivoi.entity.Chats;
 public interface ChatRepository extends JpaRepository<Chats, Integer> {
 
     Chats getByChatId(long chatId);
+    Long getIdByChatId(long chatId);
 
 }
 
