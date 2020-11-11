@@ -40,7 +40,6 @@ import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -94,20 +93,20 @@ public class BotService extends TelegramLongPollingBot {
 
     @PostConstruct
     public void initialization() throws IOException {
-        String data = new String(Files.readAllBytes(babyFile.getFile().toPath()));
-        JSONObject insultsJson = new JSONObject(data);
+        InputStream insultsStream = babyFile.getInputStream();
+        JSONObject insultsJson = new JSONObject(StreamUtils.copyToString(insultsStream, StandardCharsets.UTF_8));
         baby = insultsJson.getJSONArray("baby");
-        data = new String(Files.readAllBytes(dotaFile.getFile().toPath()));
-        insultsJson = new JSONObject(data);
+        insultsStream = dotaFile.getInputStream();
+        insultsJson = new JSONObject(StreamUtils.copyToString(insultsStream, StandardCharsets.UTF_8));
         dota = insultsJson.getJSONArray("dota");
-        data = new String(Files.readAllBytes(kolchanFile.getFile().toPath()));
-        insultsJson = new JSONObject(data);
+        insultsStream = kolchanFile.getInputStream();
+        insultsJson = new JSONObject(StreamUtils.copyToString(insultsStream, StandardCharsets.UTF_8));
         kolchan = insultsJson.getJSONArray("kolchan");
-        data = new String(Files.readAllBytes(oldsFile.getFile().toPath()));
-        insultsJson = new JSONObject(data);
+        insultsStream = oldsFile.getInputStream();
+        insultsJson = new JSONObject(StreamUtils.copyToString(insultsStream, StandardCharsets.UTF_8));
         olds = insultsJson.getJSONArray("olds");
-        data = new String(Files.readAllBytes(shizikFile.getFile().toPath()));
-        insultsJson = new JSONObject(data);
+        insultsStream = shizikFile.getInputStream();
+        insultsJson = new JSONObject(StreamUtils.copyToString(insultsStream, StandardCharsets.UTF_8));
         shizik = insultsJson.getJSONArray("shizik");
         article3.setTitle("Ребёнок");
         article3.setDescription("Ещё малолетние дэбилы");
