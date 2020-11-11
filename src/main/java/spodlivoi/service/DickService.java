@@ -28,7 +28,7 @@ public class DickService implements Roller {
     @Autowired
     private BotService bot;
 
-    public void roll(Message message, Users user){
+    public void roll(Message message, Users user) {
         try {
 
             Dicks dick = null;
@@ -43,14 +43,15 @@ public class DickService implements Roller {
                 dick = new Dicks();
                 dick.setUser(user);
                 first = true;
-            }else {
+            } else {
                 LocalDateTime current = LocalDateTime.now();
                 LocalDateTime last = dick.getLastMeasurement();
-               if(current.getDayOfMonth() == last.getDayOfMonth() &&
-                  current.getMonthValue() == last.getMonthValue() && !debug)
-                   sendMessage(message, "Ты уже измерял свой огрызок сегодня!\nПриходи через " +
+                if (current.getDayOfMonth() == last.getDayOfMonth() &&
+                        current.getMonthValue() == last.getMonthValue() && !debug) {
+                    sendMessage(message, "Ты уже измерял свой огрызок сегодня!\nПриходи через " +
                             (23 - current.getHour()) + "ч " + (59 - current.getMinute()) + "м");
-                else
+                    return;
+                } else
                     size = dick.getSize();
             }
             int upSize = getPlusDickSize();
@@ -64,7 +65,7 @@ public class DickService implements Roller {
             dick.setLastMeasurement(LocalDateTime.now());
             dickRepository.save(dick);
 
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error("Error: ", e);
             sendMessage(message, "Произошла какая-то ошибка...");
         }

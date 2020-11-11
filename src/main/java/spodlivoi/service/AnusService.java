@@ -48,10 +48,11 @@ public class AnusService implements Roller  {
                 LocalDateTime current = LocalDateTime.now();
                 LocalDateTime last = anus.getLastMeasurement();
                 if (current.getDayOfMonth() == last.getDayOfMonth() &&
-                        current.getMonthValue() == last.getMonthValue() && !debug)
+                        current.getMonthValue() == last.getMonthValue() && !debug) {
                     sendMessage(message, "На сегодня достаточно углублять анус!\nПриходи через " +
                             (23 - current.getHour()) + "ч " + (59 - current.getMinute()) + "м");
-                else
+                    return;
+                }else
                     size = anus.getSize();
             }
             int upSize = getPlusAnusSize();
