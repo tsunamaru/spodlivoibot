@@ -43,8 +43,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import static spodlivoi.utils.Tools.REPAIR_TEXT_MESSAGE;
-
 @Component
 @Slf4j
 public class BotService extends TelegramLongPollingBot {
@@ -74,6 +72,8 @@ public class BotService extends TelegramLongPollingBot {
     private Resource oldsFile;
     @Value("classpath:shizik.json")
     private Resource shizikFile;
+    @Value("${telegram.bot.maxinline}")
+    private int maxInlines;
 
     @Autowired
     private ChatRepository chatRepository;
@@ -127,7 +127,7 @@ public class BotService extends TelegramLongPollingBot {
         repairArticle.setId("6");
         repairArticle.setDescription("");
         repairArticle.setTitle("ЧИНИ!");
-        repairArticle.setInputMessageContent(new InputTextMessageContent().setMessageText(REPAIR_TEXT_MESSAGE)
+        repairArticle.setInputMessageContent(new InputTextMessageContent().setMessageText("<b>" + "ЧИНИ ".repeat(700) +"</b>")
                 .setParseMode(ParseMode.HTML));
 
         log.info("Бот запущен");
@@ -158,7 +158,6 @@ public class BotService extends TelegramLongPollingBot {
                         randomWeb.setId("1");
                         randomWeb.setDescription("Рандомный Webm из /b");
                         randomWeb.setTitle("цуим");
-
                         String video = getWebmUrl();
                         if(video.contains(".webm")){
                             InlineQueryResultArticle article = new InlineQueryResultArticle();
@@ -183,11 +182,30 @@ public class BotService extends TelegramLongPollingBot {
                                 .setInlineQueryId(update.getInlineQuery().getId());
                     } else if(update.getInlineQuery().getQuery().toLowerCase().matches("fight") ||
                             update.getInlineQuery().getQuery().toLowerCase().matches("боевая")) {
+
+                        int setCount = fightPacks.size();
+                        int sets = Randomizer.getRandomNumberInRange(1, (int)Math.ceil((double)setCount / (double)maxInlines));
+                        int start = maxInlines * (sets - 1);
+                        int end = maxInlines * sets;
+                        if(setCount < end)
+                            end = setCount;
+                        if(end - start != maxInlines)
+                            start = start + (end - start) - maxInlines;
+                        log.debug("Max inlines " + maxInlines);
+                        log.debug("Set count " + setCount);
+                        log.debug("sets " + sets);
+                        log.debug("start " + start);
+                        log.debug("end " + end);
+                        List<String> packs = fightPacks.subList(start, end);
                         List<InlineQueryResult> results = new ArrayList<>();
-                        InlineQueryResultCachedSticker q = new InlineQueryResultCachedSticker();
-                        q.setId("1");
-                        q.setStickerFileId(getSticker().getFileId());
-                        results.add(q);
+                        int i = 1;
+                        for(String pack : packs) {
+                            InlineQueryResultCachedSticker q = new InlineQueryResultCachedSticker();
+                            q.setId(String.valueOf(i));
+                            q.setStickerFileId(getSticker(getStickerSet(pack)).getFileId());
+                            results.add(q);
+                            i++;
+                        }
                         answerInlineQuery = new AnswerInlineQuery().setCacheTime(0)
                                 .setPersonal(true)
                                 .setResults(results)
@@ -565,11 +583,21 @@ public class BotService extends TelegramLongPollingBot {
     private StickerSet getFightStickers() {
         StickerSet stickerSet = null;
         try {
-            stickerSet = execute(new GetStickerSet((String) Tools.getRandomValueFormArrayList(fightPacks)));
+            stickerSet = execute(new GetStickerSet(Randomizer.getRandomValueFormList(fightPacks)));
         } catch (TelegramApiException e) {
             log.error("Error: ", e);
         }
        return stickerSet;
+    }
+
+    private  StickerSet getStickerSet(String name){
+        StickerSet stickerSet = null;
+        try {
+            stickerSet = execute(new GetStickerSet(name));
+        } catch (TelegramApiException e) {
+            log.error("Error: ", e);
+        }
+        return stickerSet;
     }
 
     private Sticker getSticker(){
@@ -580,7 +608,7 @@ public class BotService extends TelegramLongPollingBot {
         if(stickerSet == null) {
             return null;
         }
-        return (Sticker) Tools.getRandomValueFormArrayList(stickerSet.getStickers());
+        return  Randomizer.getRandomValueFormList(stickerSet.getStickers());
     }
 
     private void sendFightSticker(Message message, boolean reply){
@@ -634,8 +662,7 @@ public class BotService extends TelegramLongPollingBot {
             if(user == null)
                 user = registerUser(message, chat);
 
-            String mess = new String(roller.roll(user).getBytes(),
-                    StandardCharsets.UTF_8);
+            String mess = roller.roll(user);
             sendMessage.setReplyToMessageId(message.getMessageId());
             sendMessage.setText(mess);
             sendMessage.enableMarkdown(true);

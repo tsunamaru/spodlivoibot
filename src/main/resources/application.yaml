@@ -1,0 +1,37 @@
+dvach:
+  url: https://2ch.hk/b/catalog.json
+logging:
+  file:
+    name: spodlivoi.log
+  level:
+    spodlivoi: error
+spring:
+  application:
+    name: spodlivoi_bot
+  datasource:
+    driverClassName: org.postgresql.Driver
+    password: ''
+    url: ''
+    username: ''
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+      naming:
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+  main:
+    web-application-type: none
+    web-environment: false
+telegram:
+  bot:
+    anus:
+      items: сосиску,мамин дилдак,отчима,мёртвого деда,шампунь,бутылку,банку
+    maxinline: 7
+    sticker-packs: sosatlezhatsosat,fightpics,test228idinaxui,davlyu,gasiki2,durkaebt,daEntoOn,Bodyafleks3,Rjaka228,Stickers_ebat,em_sho,vdyrky,onegaionegai,sp792a9133ad7d0b9144089d7350483d5c_by_stckrRobot
+    token: ''
+    username: ''
