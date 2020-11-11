@@ -1,3 +1,4 @@
+debug: false
 dvach:
   url: https://2ch.hk/b/catalog.json
 logging:
