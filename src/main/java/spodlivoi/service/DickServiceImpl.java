@@ -2,6 +2,7 @@ package spodlivoi.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import spodlivoi.entity.Dicks;
 import spodlivoi.entity.Users;
@@ -17,6 +18,9 @@ public class DickServiceImpl implements DickService {
 
     @Autowired
     private DickRepository dickRepository;
+
+    @Value("${debug}")
+    private boolean debug;
 
     public String roll(Users user){
         try {
@@ -39,7 +43,7 @@ public class DickServiceImpl implements DickService {
                 current = current.minusHours(0);
                 last = last.minusHours(0);
                if(current.getDayOfMonth() == last.getDayOfMonth() &&
-                  current.getMonthValue() == last.getMonthValue())
+                  current.getMonthValue() == last.getMonthValue() && !debug)
                     return "Ты уже измерял свой огрызок сегодня!\nПриходи через " +
                             (23 - current.getHour()) + "ч " + (59 - current.getMinute()) + "м";
                 else
@@ -51,7 +55,8 @@ public class DickServiceImpl implements DickService {
                 size = 0;
             dick.setSize(size);
             dick.setLastMeasurement(LocalDateTime.now());
-            dickRepository.save(dick);
+            if(!debug)
+                dickRepository.save(dick);
             int dickText = Randomizer.getRandomNumberInRange(1, 5);
             String upSize = String.valueOf(upSizeN).
                     replaceAll("-", "");
