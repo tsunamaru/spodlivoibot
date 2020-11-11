@@ -31,8 +31,8 @@ spring:
 telegram:
   bot:
     anus:
-      items: сосиску,мамин дилдак,отчима,мёртвого деда,шампунь,бутылку,банку
-    maxinline: 7
+      items: сосиску,мамин дилдак,отчима,мёртвого деда,шампунь,бутылку,банку,балалайку,водку,матрёшку,маркер,кота,кабачок
+    maxinline: 10
     sticker-packs: sosatlezhatsosat,fightpics,test228idinaxui,davlyu,gasiki2,durkaebt,daEntoOn,Bodyafleks3,Rjaka228,Stickers_ebat,em_sho,vdyrky,onegaionegai,sp792a9133ad7d0b9144089d7350483d5c_by_stckrRobot
     token: ''
     username: ''

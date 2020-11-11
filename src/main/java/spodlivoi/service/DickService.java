@@ -1,10 +1,160 @@
 package spodlivoi.service;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import spodlivoi.entity.Dicks;
+import spodlivoi.entity.Users;
+import spodlivoi.repository.DickRepository;
 import spodlivoi.utils.Randomizer;
 
-public interface DickService extends Roller {
+import java.time.LocalDateTime;
+import java.util.List;
 
-    default int getPlusDickSize(){
+@Slf4j
+@Component
+public class DickService implements Roller {
+
+    @Autowired
+    private DickRepository dickRepository;
+
+    @Value("${debug}")
+    private boolean debug;
+
+    @Autowired
+    private BotService bot;
+
+    public void roll(Message message, Users user){
+        try {
+
+            Dicks dick = null;
+            boolean first = false;
+            int size = 0;
+            try {
+                dick = user.getDick();
+            } catch (Exception e) {
+                log.error("Error: ", e);
+            }
+            if (dick == null) {
+                dick = new Dicks();
+                dick.setUser(user);
+                first = true;
+            }else {
+                LocalDateTime current = LocalDateTime.now();
+                LocalDateTime last = dick.getLastMeasurement();
+               if(current.getDayOfMonth() == last.getDayOfMonth() &&
+                  current.getMonthValue() == last.getMonthValue() && !debug)
+                   sendMessage(message, "Ты уже измерял свой огрызок сегодня!\nПриходи через " +
+                            (23 - current.getHour()) + "ч " + (59 - current.getMinute()) + "м");
+                else
+                    size = dick.getSize();
+            }
+            int upSize = getPlusDickSize();
+            size += upSize;
+            if (size < 0 || upSize == 0)
+                size = 0;
+
+            sendMessage(message, getRollMessage(first, size, Math.abs(upSize)));
+
+            dick.setSize(size);
+            dick.setLastMeasurement(LocalDateTime.now());
+            dickRepository.save(dick);
+
+        }catch (Exception e){
+            log.error("Error: ", e);
+            sendMessage(message, "Произошла какая-то ошибка...");
+        }
+
+    }
+
+    private void sendMessage(Message message, String text) {
+        SendMessage sendMessage = new SendMessage().setChatId(message.getChatId());
+        sendMessage.setReplyToMessageId(message.getMessageId());
+        sendMessage.setText(text);
+        sendMessage.enableMarkdown(true);
+        try {
+            bot.execute(sendMessage);
+        } catch (TelegramApiException e) {
+            log.error("Error: ", e);
+        }
+        log.debug("End roll time: {}", System.currentTimeMillis());
+    }
+
+    private String getRollMessage(boolean first, int size, int upSize) {
+        if(first){
+            if(size == 0)
+                return "На данный момент ты не имеешь писюна, неудачник!";
+            else
+                return "Ого! Размер твоего писюна аж " + size +
+                        "см!\nПриходи завтра. Посмотрим, изменился ли он";
+        } else{
+            int dickText = Randomizer.getRandomNumberInRange(1, 5);
+            if(size == 0)
+                return "Мои соболезнования. Сегодня у тебя произошла страшная трагедия: твой писюн отпал.";
+            if(upSize < 0) {
+
+                switch (dickText) {
+                    case 1:
+                        return "Ахахахах, неудачник. Твой огрызок стал меньше на целых " + upSize +
+                                "см.\nТеперь его длина " + size + "см.";
+                    case 2:
+                        return "Твой и не без того маленький пенис стал меньше на " + upSize +
+                                "см.\nТеперь его длина " + size + "см.";
+                    case 3:
+                        return "Нуууу, что тут можно ещё сказать... Твоя пипирка уменьшилась на " + upSize +
+                                "см.\nТеперь её длина " + size + "см.";
+                    case 4:
+                        return "Так-так, что тут у нас? *УМЕНЬШЕНИЕ ПЕНИСА!* на целых " + upSize +
+                                "см.\nТеперь его длина " + size + "см.";
+                    case 5:
+                        return "Мои спутники зафиксировали уменьшение твоего полового органа на " + upSize +
+                                "см.\nТеперь его длина " + size + "см.\n*АХАХАХАХАХАХАХ.* Ржу с тебя.";
+                }
+            }else
+                switch (dickText) {
+                    case 1:
+                        return "Поздравляю! Твой член сегодня вырос на целых " + upSize + "см. \n" +
+                                "Теперь его длина " + size + "см. Скоро ты станешь настоящим мужчиной!";
+                    case 2:
+                        return "*Ах ты читер!* Каким-то образом ты смог увеличить свой писюн на " + upSize + "см. \n" +
+                                "Теперь его длина " + size + "см. Скоро ты станешь настоящим мужчиной!";
+                    case 3:
+                        return "Твой пенис скоро можно будет фиксировать со спутников. Он вырос на " + upSize + "см. \n" +
+                                "Теперь его длина " + size + "см. Скоро ты станешь настоящим мужчиной!";
+                    case 4:
+                        return "Ох, ну и завидую же я тебе, потому что твои причиндалы стали больше на " + upSize + "см. \n" +
+                                "Теперь их длина " + size + "см. Скоро ты станешь настоящим мужчиной!";
+                    case 5:
+                        return "Все женщины в шоке! Твой гигантский половой орган стал больше на " + upSize + "см. \n" +
+                                "Теперь его длина " + size + "см. Скоро ты станешь настоящим мужчиной!";
+                }
+        }
+        return "Пиздец...";
+    }
+
+    @Override
+    public String getTop(List<Users> users) {
+        StringBuilder message = new StringBuilder();
+        int number = 1;
+        users.sort((d1, d2) -> Integer.compare(d2.getDick().getSize(), d1.getDick().getSize()));
+        for(Users user : users){
+            message.append(number).append(". ");
+            message.append(user.getUserName());
+            message.append(" - ").append(user.getDick().getSize()).append("см;\n");
+            number++;
+        }
+        if (message.toString().equals(""))
+            message = new StringBuilder("Никто ещё не роллил писюн");
+        else
+            message.insert(0, "Топ писюнов:\n\n");
+        return message.toString();
+    }
+
+    private int getPlusDickSize(){
         int lucky = Randomizer.getRandomNumberInRange(0, 100);
         if (lucky == 0)
             return 0;
@@ -21,5 +171,6 @@ public interface DickService extends Roller {
         else
             return Randomizer.getRandomNumberInRange(1, 6);
     }
+
 
 }

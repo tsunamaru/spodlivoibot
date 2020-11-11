@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StreamUtils;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerInlineQuery;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
@@ -33,13 +34,13 @@ import spodlivoi.enums.CopypasteType;
 import spodlivoi.repository.ChatRepository;
 import spodlivoi.repository.UserRepository;
 import spodlivoi.utils.Randomizer;
-import spodlivoi.utils.Tools;
 
 import javax.annotation.PostConstruct;
 import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -93,20 +94,20 @@ public class BotService extends TelegramLongPollingBot {
 
     @PostConstruct
     public void initialization() throws IOException {
-        InputStream insultsStream = babyFile.getInputStream();
-        JSONObject insultsJson = new JSONObject(Tools.convertStreamToString(insultsStream));
+        String data = new String(Files.readAllBytes(babyFile.getFile().toPath()));
+        JSONObject insultsJson = new JSONObject(data);
         baby = insultsJson.getJSONArray("baby");
-        insultsStream = dotaFile.getInputStream();
-        insultsJson = new JSONObject(Tools.convertStreamToString(insultsStream));
+        data = new String(Files.readAllBytes(dotaFile.getFile().toPath()));
+        insultsJson = new JSONObject(data);
         dota = insultsJson.getJSONArray("dota");
-        insultsStream = kolchanFile.getInputStream();
-        insultsJson = new JSONObject(Tools.convertStreamToString(insultsStream));
+        data = new String(Files.readAllBytes(kolchanFile.getFile().toPath()));
+        insultsJson = new JSONObject(data);
         kolchan = insultsJson.getJSONArray("kolchan");
-        insultsStream = oldsFile.getInputStream();
-        insultsJson = new JSONObject(Tools.convertStreamToString(insultsStream));
+        data = new String(Files.readAllBytes(oldsFile.getFile().toPath()));
+        insultsJson = new JSONObject(data);
         olds = insultsJson.getJSONArray("olds");
-        insultsStream = shizikFile.getInputStream();
-        insultsJson = new JSONObject(Tools.convertStreamToString(insultsStream));
+        data = new String(Files.readAllBytes(shizikFile.getFile().toPath()));
+        insultsJson = new JSONObject(data);
         shizik = insultsJson.getJSONArray("shizik");
         article3.setTitle("Ребёнок");
         article3.setDescription("Ещё малолетние дэбилы");
@@ -135,7 +136,6 @@ public class BotService extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-
         try {
             if (update.hasMessage()) {
                 Message message = update.getMessage();
@@ -149,100 +149,93 @@ public class BotService extends TelegramLongPollingBot {
                         sendFightSticker(message, true);
                 }
             } else if (update.hasInlineQuery()) {
-                Thread thread = new Thread(() -> {
-                    AnswerInlineQuery answerInlineQuery;
-                    if(update.getInlineQuery().getQuery().equals("webm") ||
-                            update.getInlineQuery().getQuery().equals("video")){
-                        List<InlineQueryResult> results = new ArrayList<>();
-                        InlineQueryResultVideo randomWeb = new InlineQueryResultVideo();
-                        randomWeb.setId("1");
-                        randomWeb.setDescription("Рандомный Webm из /b");
-                        randomWeb.setTitle("цуим");
-                        String video = getWebmUrl();
-                        if(video.contains(".webm")){
-                            InlineQueryResultArticle article = new InlineQueryResultArticle();
-                            article.setId("1");
-                            article.setDescription("Рандомный Webm из /b");
-                            article.setTitle("цуим");
-                            article.setInputMessageContent(new InputTextMessageContent().
-                                    setMessageText("Извини, пашеграм не поддерживает webm: " + video));
-                            results.add(article);
-                        } else {
-                            String thumb = video;
-                            thumb = thumb.replaceAll("/b/src/", "/b/thumb/");
-                            thumb = thumb.replaceAll(".mp4", "s.jpg");
-                            randomWeb.setVideoUrl(video);
-                            randomWeb.setThumbUrl(thumb);
-                            randomWeb.setMimeType("video/mp4");
-                            results.add(randomWeb);
-                        }
-                        answerInlineQuery = new AnswerInlineQuery().setCacheTime(0)
-                                .setPersonal(true)
-                                .setResults(results)
-                                .setInlineQueryId(update.getInlineQuery().getId());
-                    } else if(update.getInlineQuery().getQuery().toLowerCase().matches("fight") ||
-                            update.getInlineQuery().getQuery().toLowerCase().matches("боевая")) {
 
-                        int setCount = fightPacks.size();
-                        int sets = Randomizer.getRandomNumberInRange(1, (int)Math.ceil((double)setCount / (double)maxInlines));
-                        int start = maxInlines * (sets - 1);
-                        int end = maxInlines * sets;
-                        if(setCount < end)
-                            end = setCount;
-                        if(end - start != maxInlines)
-                            start = start + (end - start) - maxInlines;
-                        log.debug("Max inlines " + maxInlines);
-                        log.debug("Set count " + setCount);
-                        log.debug("sets " + sets);
-                        log.debug("start " + start);
-                        log.debug("end " + end);
-                        List<String> packs = fightPacks.subList(start, end);
-                        List<InlineQueryResult> results = new ArrayList<>();
-                        int i = 1;
-                        for(String pack : packs) {
-                            InlineQueryResultCachedSticker q = new InlineQueryResultCachedSticker();
-                            q.setId(String.valueOf(i));
-                            q.setStickerFileId(getSticker(getStickerSet(pack)).getFileId());
-                            results.add(q);
-                            i++;
-                        }
-                        answerInlineQuery = new AnswerInlineQuery().setCacheTime(0)
-                                .setPersonal(true)
-                                .setResults(results)
-                                .setInlineQueryId(update.getInlineQuery().getId());
-                    }else {
-                        List<InlineQueryResult> results = new ArrayList<>();
-                        article.setInputMessageContent(new InputTextMessageContent().setMessageText(
-                                getRandomCopyPaste(CopypasteType.olds)).setParseMode(ParseMode.MARKDOWN));
+                AnswerInlineQuery answerInlineQuery;
+                if (update.getInlineQuery().getQuery().equals("webm") ||
+                        update.getInlineQuery().getQuery().equals("video")) {
+                    List<InlineQueryResult> results = new ArrayList<>();
+                    InlineQueryResultVideo randomWeb = new InlineQueryResultVideo();
+                    randomWeb.setId("1");
+                    randomWeb.setDescription("Рандомный Webm из /b");
+                    randomWeb.setTitle("цуим");
+                    String video = getWebmUrl();
+                    if (video.contains(".webm")) {
+                        InlineQueryResultArticle article = new InlineQueryResultArticle();
+                        article.setId("1");
+                        article.setDescription("Рандомный Webm из /b");
+                        article.setTitle("цуим");
+                        article.setInputMessageContent(new InputTextMessageContent().
+                                setMessageText("Извини, пашеграм не поддерживает webm: " + video));
                         results.add(article);
-                        article2.setInputMessageContent(new InputTextMessageContent().setMessageText(
-                                getRandomCopyPaste(CopypasteType.dota)).setParseMode(ParseMode.MARKDOWN));
-                        results.add(article2);
-                        article3.setInputMessageContent(new InputTextMessageContent().setMessageText(
-                                getRandomCopyPaste(CopypasteType.baby)).setParseMode(ParseMode.MARKDOWN));
-                        results.add(article3);
-                        article4.setInputMessageContent(new InputTextMessageContent().setMessageText(
-                                getRandomCopyPaste(CopypasteType.kolchan)).setParseMode(ParseMode.MARKDOWN));
-                        results.add(article4);
-                        article5.setInputMessageContent(new InputTextMessageContent().setMessageText(
-                                getRandomCopyPaste(CopypasteType.shizik)).setParseMode(ParseMode.MARKDOWN));
-                        results.add(article5);
-                        results.add(repairArticle);
-                        answerInlineQuery = new AnswerInlineQuery().setCacheTime(0)
-                                .setPersonal(true)
-                                .setResults(results)
-                                .setInlineQueryId(update.getInlineQuery().getId());
+                    } else {
+                        String thumb = video;
+                        thumb = thumb.replaceAll("/b/src/", "/b/thumb/");
+                        thumb = thumb.replaceAll(".mp4", "s.jpg");
+                        randomWeb.setVideoUrl(video);
+                        randomWeb.setThumbUrl(thumb);
+                        randomWeb.setMimeType("video/mp4");
+                        results.add(randomWeb);
                     }
-                    try {
-                        execute(answerInlineQuery);
-                    } catch (Exception e) {
+                    answerInlineQuery = new AnswerInlineQuery().setCacheTime(0)
+                            .setPersonal(true)
+                            .setResults(results)
+                            .setInlineQueryId(update.getInlineQuery().getId());
+                } else if (update.getInlineQuery().getQuery().toLowerCase().matches("fight") ||
+                        update.getInlineQuery().getQuery().toLowerCase().matches("боевая")) {
 
-                        log.error("Error: ", e);
+                    int setCount = fightPacks.size();
+                    int sets = Randomizer.getRandomNumberInRange(1, (int) Math.ceil((double) setCount / (double) maxInlines));
+                    int start = maxInlines * (sets - 1);
+                    int end = maxInlines * sets;
+                    if (setCount < end)
+                        end = setCount;
+                    if (end - start != maxInlines)
+                        start = start + (end - start) - maxInlines;
+                    List<String> packs = fightPacks.subList(start, end);
+                    List<InlineQueryResult> results = new ArrayList<>();
+                    int i = 1;
+                    for (String pack : packs) {
+                        InlineQueryResultCachedSticker q = new InlineQueryResultCachedSticker();
+                        q.setId(String.valueOf(i));
+                        q.setStickerFileId(getSticker(getStickerSet(pack)).getFileId());
+                        results.add(q);
+                        i++;
                     }
-                });
-                thread.start();
+                    answerInlineQuery = new AnswerInlineQuery().setCacheTime(0)
+                            .setPersonal(true)
+                            .setResults(results)
+                            .setInlineQueryId(update.getInlineQuery().getId());
+                } else {
+                    List<InlineQueryResult> results = new ArrayList<>();
+                    article.setInputMessageContent(new InputTextMessageContent().setMessageText(
+                            getRandomCopyPaste(CopypasteType.olds)).setParseMode(ParseMode.MARKDOWN));
+                    results.add(article);
+                    article2.setInputMessageContent(new InputTextMessageContent().setMessageText(
+                            getRandomCopyPaste(CopypasteType.dota)).setParseMode(ParseMode.MARKDOWN));
+                    results.add(article2);
+                    article3.setInputMessageContent(new InputTextMessageContent().setMessageText(
+                            getRandomCopyPaste(CopypasteType.baby)).setParseMode(ParseMode.MARKDOWN));
+                    results.add(article3);
+                    article4.setInputMessageContent(new InputTextMessageContent().setMessageText(
+                            getRandomCopyPaste(CopypasteType.kolchan)).setParseMode(ParseMode.MARKDOWN));
+                    results.add(article4);
+                    article5.setInputMessageContent(new InputTextMessageContent().setMessageText(
+                            getRandomCopyPaste(CopypasteType.shizik)).setParseMode(ParseMode.MARKDOWN));
+                    results.add(article5);
+                    results.add(repairArticle);
+                    answerInlineQuery = new AnswerInlineQuery().setCacheTime(0)
+                            .setPersonal(true)
+                            .setResults(results)
+                            .setInlineQueryId(update.getInlineQuery().getId());
+                }
+                try {
+                    execute(answerInlineQuery);
+                } catch (Exception e) {
+
+                    log.error("Error: ", e);
+                }
             }
-        } catch (Exception e){
+        } catch (Exception e) {
             log.error("Error: ", e);
         }
     }
@@ -270,9 +263,11 @@ public class BotService extends TelegramLongPollingBot {
         }
         switch (command) {
             case "/dick":
+                log.debug("Start roll time: {}", System.currentTimeMillis());
                 roll(message, dickService);
                 break;
             case "/anus":
+                log.debug("Start roll time: {}", System.currentTimeMillis());
                 roll(message, anusService);
                 break;
             case "/fight":
@@ -367,7 +362,7 @@ public class BotService extends TelegramLongPollingBot {
         URL url = new URL(dvachUrl);
         HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
         InputStream in = new BufferedInputStream(connection.getInputStream());
-        JSONObject answer = new JSONObject(Tools.convertStreamToString(in));
+        JSONObject answer = new JSONObject(StreamUtils.copyToString(in, StandardCharsets.UTF_8));
         JSONArray answerArray = answer.getJSONArray("threads");
         in.close();
         return answerArray;
@@ -395,7 +390,7 @@ public class BotService extends TelegramLongPollingBot {
                     + threadNumber + "&post=0");
             HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
             InputStream in = new BufferedInputStream(connection.getInputStream());
-            JSONArray videoPosts = new JSONArray(Tools.convertStreamToString(in));
+            JSONArray videoPosts = new JSONArray(StreamUtils.copyToString(in, StandardCharsets.UTF_8));
             in.close();
 
             while (video.equals("")) {
@@ -639,7 +634,7 @@ public class BotService extends TelegramLongPollingBot {
         return chat;
     }
 
-    public Users registerUser(Message message, Chats chat) {
+    Users registerUser(Message message, Chats chat) {
         if (chat == null)
             chat = chatRepository.getByChatId(message.getChatId());
         Users user = new Users();
@@ -653,20 +648,13 @@ public class BotService extends TelegramLongPollingBot {
 
     private void roll(Message message, Roller roller) {
         try {
-            SendMessage sendMessage = new SendMessage().setChatId(message.getChatId());
-
             Chats chat = chatRepository.getByChatId(message.getChatId());
             if(chat == null)
                 chat = registerChat(message);
             Users user = userRepository.getByChatIdAndUserId(chat.getId(), message.getFrom().getId());
             if(user == null)
                 user = registerUser(message, chat);
-
-            String mess = roller.roll(user);
-            sendMessage.setReplyToMessageId(message.getMessageId());
-            sendMessage.setText(mess);
-            sendMessage.enableMarkdown(true);
-            execute(sendMessage);
+            roller.roll(message, user);
         }catch (Exception e){
             log.error("Error: ", e);
         }
