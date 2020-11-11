@@ -69,4 +69,4 @@ jobs:
 
           docker-compose pull
           docker-compose down || true
-          docker compose up -d
+          docker-compose up -d
