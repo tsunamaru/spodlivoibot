@@ -63,9 +63,9 @@ jobs:
         run: |
           curl -O -L https://raw.githubusercontent.com/${{ github.repository }}/master/docker-compose.yml
 
-          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-          TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_BOT_USERNAME=${{ secrets.TELEGRAM_BOT_USERNAME }}
+          export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          export TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
+          export TELEGRAM_BOT_USERNAME=${{ secrets.TELEGRAM_BOT_USERNAME }}
 
           docker-compose pull
           docker-compose down || true
