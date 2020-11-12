@@ -3,10 +3,11 @@ FROM amazoncorretto:11-alpine as builder
 COPY ./src /workspace/src
 COPY ./build.gradle /workspace/build.gradle
 WORKDIR /workspace
+ENV GV="6.7"
 
-RUN wget https://downloads.gradle-dn.com/distributions/gradle-6.3-bin.zip && \
-    unzip gradle-6.3-bin.zip && \
-    ./gradle-6.3/bin/gradle assemble --no-daemon
+RUN wget https://downloads.gradle-dn.com/distributions/gradle-${GV}-bin.zip && \
+    unzip gradle-${GV}-bin.zip && \
+    ./gradle-${GV}/bin/gradle assemble --no-daemon --warning-mode all
 
 FROM amazoncorretto:11-alpine
 
