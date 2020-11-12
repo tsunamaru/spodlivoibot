@@ -4,6 +4,7 @@
 !/utils
 !/.gitignore
 !/.gitattributes
+!/.dockerignore
 !/build.gradle
 !/docker-compose.yml
 !/Dockerfile
