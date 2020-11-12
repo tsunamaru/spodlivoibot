@@ -21,7 +21,6 @@ RUN apk add --no-cache \
     cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
     echo "${TZ}" > /etc/timezone
 
-ENV LANG C.UTF-8
 WORKDIR /workspace
 USER nobody
 CMD java -Xms256m -Xmx512m -Dfile.encoding=UTF-8 -jar spodlivoi.jar
