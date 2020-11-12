@@ -1,7 +1,9 @@
 /*
 !/.github
 !/src
+!/utils
 !/.gitignore
+!/.gitattributes
 !/build.gradle
 !/docker-compose.yml
 !/Dockerfile
