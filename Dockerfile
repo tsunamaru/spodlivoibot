@@ -8,7 +8,7 @@ RUN gradle assemble --no-daemon
 
 FROM amazoncorretto:11-alpine
 
-COPY --from=builder /workspace/build/libs/*.jar /workspace/spodlivoi.jar
+COPY --from=builder --chown=nobody:nobody /workspace/build/libs/*.jar /workspace/spodlivoi.jar
 ARG TZ="Europe/Moscow"
 
 RUN apk add --no-cache \
@@ -20,4 +20,5 @@ RUN apk add --no-cache \
 
 ENV LANG C.UTF-8
 WORKDIR /workspace
+USER nobody
 CMD java -Xms256m -Xmx512m -Dfile.encoding=UTF-8 -jar spodlivoi.jar
