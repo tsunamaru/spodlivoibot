@@ -1,4 +1,4 @@
-name: Docker
+name: Deployment
 
 on:
   push:
@@ -11,16 +11,12 @@ on:
       - v*
 
 env:
-
   IMAGE_NAME: ci-build
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
-
     steps:
       - uses: actions/checkout@v2
 
