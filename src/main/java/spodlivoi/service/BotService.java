@@ -180,7 +180,8 @@ public class BotService extends TelegramLongPollingBot {
                             .setResults(results)
                             .setInlineQueryId(update.getInlineQuery().getId());
                 } else if (update.getInlineQuery().getQuery().toLowerCase().matches("fight") ||
-                        update.getInlineQuery().getQuery().toLowerCase().matches("боевая")) {
+                        update.getInlineQuery().getQuery().toLowerCase().matches("боевая") || 
+                        update.getInlineQuery().getQuery().toLowerCase().matches("хрю")) {
 
                     int setCount = fightPacks.size();
                     int sets = Randomizer.getRandomNumberInRange(1, (int) Math.ceil((double) setCount / (double) maxInlines));
@@ -454,7 +455,7 @@ public class BotService extends TelegramLongPollingBot {
                             try {
                                 SendMessage sendMessage = new SendMessage().setChatId(message.getChatId());
                                 sendMessage.setReplyToMessageId(message.getMessageId());
-                                sendMessage.setText("Какой-то уебан закодировал видео в vp8...\nПодожди. Мне нужно немного времени, чтоб исправить это.");
+                                sendMessage.setText("Какой-то уебан закодировал видео в vp8...\nПодожди, мне нужно немного времени чтобы исправить это.");
                                 p = Runtime.getRuntime().exec(
                                         "rm -rf /tmp/" + filename + ".mp4");
                                 p.waitFor();
@@ -525,7 +526,7 @@ public class BotService extends TelegramLongPollingBot {
                 post = post.replaceAll("<i>", "_");
                 post = post.replaceAll("</i>", "_");
                 post = post.replaceAll("<[a-zA-Z0-9=\\-\".,/_ ]+>", "");
-                post += "\n\nЧитать подробнее: https://2ch.hk/b/res/" + answerArray.getJSONObject(r).getString("num")
+                post += "\n\nПерейти в тред: https://2ch.hk/b/res/" + answerArray.getJSONObject(r).getString("num")
                         + ".html";
 
                 post = "<i>" + postJson.getString("date") + "</i>\n\n" +  post;
