@@ -1,10 +1,12 @@
-FROM gradle:6.3-jdk11 as builder
+FROM amazoncorretto:11-alpine as builder
 
 COPY ./src /workspace/src
 COPY ./build.gradle /workspace/build.gradle
 WORKDIR /workspace
 
-RUN gradle assemble --no-daemon
+RUN wget https://downloads.gradle-dn.com/distributions/gradle-6.3-bin.zip && \
+    unzip gradle-6.3-bin.zip && \
+    ./gradle-6.3/bin/gradle assemble --no-daemon
 
 FROM amazoncorretto:11-alpine
 
