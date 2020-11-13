@@ -14,10 +14,11 @@ Create new bot with [@BotFather](https://t.me/BotFather) and fill your values in
 You should replace `TELEGRAM_BOT_TOKEN` and `TELEGRAM_BOT_USERNAME` at least before starting.  
 Start is simple as `docker-compose up --build -d`  
 
-**Note:** Docker has very annoing bug https://github.com/moby/moby/issues/2259 that will cause exception on first start:  
+**Note:** Docker has very annoing [bug #2259](https://github.com/moby/moby/issues/2259) that will cause exception on first start:  
 ```Unable to create file /var/log/spodlivoi.log java.io.IOException: Permission denied```   
-If you encountered this, run once on your host: ```chown -R $(docker-compose exec spodlivoi id -u) $(docker inspect spodlivoibot_spodlivoilogs -f {{.Mountpoint}})```
-Although, if you don't need persistent logs, you can simply ignore this.
+If you encountered this, run once on your host: 
+```chown -R $(docker-compose exec spodlivoi id -u) $(docker inspect spodlivoibot_spodlivoilogs -f {{.Mountpoint}})```  
+Although, if you don't need persistent logs, you can simply ignore this.  
 
 Demo: [@spodlivoi_bot](https://t.me/spodlivoi_bot)  
 
