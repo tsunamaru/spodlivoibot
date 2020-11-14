@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
 
-    spodlivoi:
+    app:
         image: docker.pkg.github.com/tsunamaru/spodlivoibot/ci-build:latest
         build: 
           dockerfile: Dockerfile
@@ -16,7 +16,7 @@ services:
             LOGGING_FILE_NAME: /var/log/spodlivoi.log
         restart: always
         volumes:
-          - spodlivoilogs:/var/log
+          - logs:/var/log
         depends_on:
             - db
             - redis
@@ -29,16 +29,16 @@ services:
             POSTGRES_DB: spodlivoi
             PGDATA: /var/lib/postgresql/data/pgdata
         volumes:
-          - spodlivoidb:/var/lib/postgresql/data/pgdata
+          - db:/var/lib/postgresql/data
         restart: always
     
     redis:
         image: redis:6-alpine
         volumes:
-          - spodlivoiredis:/data
+          - redis:/data
         restart: always
 
 volumes:
-  spodlivoidb:
-  spodlivoilogs: 
-  spodlivoiredis:
+  db:
+  logs: 
+  redis:
