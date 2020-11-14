@@ -2,10 +2,12 @@ FROM amazoncorretto:11-alpine as builder
 
 COPY ./src /workspace/src
 COPY ./build.gradle /workspace/build.gradle
-ADD ./utils/gradle-6.7-bin.tar /workspace
+ADD https://downloads.gradle-dn.com/distributions/gradle-6.7-bin.zip /workspace
 WORKDIR /workspace
 
-RUN ./gradle-6.7/bin/gradle assemble --no-daemon --warning-mode all
+RUN unzip gradle-6.7-bin.zip && \
+    rm -f gradle-6.7-bin.zip && \
+    ./gradle-6.7/bin/gradle assemble --no-daemon --warning-mode all
 
 FROM amazoncorretto:11-alpine
 
