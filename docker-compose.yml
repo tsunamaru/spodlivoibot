@@ -19,6 +19,7 @@ services:
           - spodlivoilogs:/var/log
         depends_on:
             - db
+            - redis
 
     db:
         image: postgres:13-alpine
@@ -30,7 +31,14 @@ services:
         volumes:
           - spodlivoidb:/var/lib/postgresql/data/pgdata
         restart: always
+    
+    redis:
+        image: redis:6-alpine
+        volumes:
+          - spodlivoiredis:/data
+        restart: always
 
 volumes:
   spodlivoidb:
   spodlivoilogs: 
+  spodlivoiredis:
