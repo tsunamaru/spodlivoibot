@@ -1,6 +1,7 @@
 package spodlivoi.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
@@ -47,6 +48,7 @@ import java.util.List;
 @Component
 @Slf4j
 @RequiredArgsConstructor
+@Setter
 public class BotService extends TelegramLongPollingBot {
 
 
@@ -81,8 +83,8 @@ public class BotService extends TelegramLongPollingBot {
 
     private final ChatRepository chatRepository;
     private final UserRepository userRepository;
-    private final DickService dickService;
-    private final AnusService anusService;
+    private DickService dickService;
+    private AnusService anusService;
 
     private final InlineQueryResultArticle article = new InlineQueryResultArticle();
     private final InlineQueryResultArticle article2 = new InlineQueryResultArticle();

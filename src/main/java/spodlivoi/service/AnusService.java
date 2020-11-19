@@ -12,6 +12,7 @@ import spodlivoi.entity.Users;
 import spodlivoi.repository.AnusRepository;
 import spodlivoi.utils.Randomizer;
 
+import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +29,11 @@ public class AnusService implements Roller  {
     private ArrayList<String> items;
     @Value("${debug}")
     private boolean debug;
+
+    @PostConstruct
+    public void init(){
+        bot.setAnusService(this);
+    }
 
     public void roll(Message message, Users user) {
         try {

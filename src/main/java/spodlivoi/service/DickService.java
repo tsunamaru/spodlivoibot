@@ -12,6 +12,7 @@ import spodlivoi.entity.Users;
 import spodlivoi.repository.DickRepository;
 import spodlivoi.utils.Randomizer;
 
+import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -22,6 +23,11 @@ public class DickService implements Roller {
 
     private final DickRepository dickRepository;
     private final BotService bot;
+
+    @PostConstruct
+    public void init(){
+        bot.setDickService(this);
+    }
 
     @Value("${debug}")
     private boolean debug;
