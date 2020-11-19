@@ -48,7 +48,7 @@ public class AnusService implements Roller  {
                 LocalDateTime last = anus.getLastMeasurement();
                 if (current.getDayOfMonth() == last.getDayOfMonth() &&
                         current.getMonthValue() == last.getMonthValue() && !debug) {
-                    sendMessage(message, "На сегодня достаточно углублять анус!\nПриходи через " +
+                    sendMessage(message, "На сегодня достаточно шалить со своим анусом!\nВозвращайся через " +
                             (23 - current.getHour()) + "ч " + (59 - current.getMinute()) + "м");
                     return;
                 }else
@@ -85,49 +85,57 @@ public class AnusService implements Roller  {
     private String getRollMessage(boolean first, int size, int upSize) {
         if (first) {
             if (size == 0)
-                return "На данный момент ты анальный девственник!";
+                return "На данный момент твоя анальная девственность при тебе!";
             else
-                return "Пиздец! Глубина твоего ануса аж " + size +
-                        "см!\nСледующий осмотр завтра";
+                return "Ахуеть! Глубина твоего ануса аж " + size +
+                        "см!\nЖду тебя завтра на повторный осмотр!";
         } else {
             if (size == 0)
                 return "Мои соболезнования. Сегодня у тебя произошла страшная трагедия: твой анус зашили.";
 
             if (upSize < 0) {
-                int messageNumber = Randomizer.getRandomNumberInRange(0, 2);
+                int messageNumber = Randomizer.getRandomNumberInRange(0, 3);
                 switch (messageNumber) {
                     case 0:
-                        return "Прорыв в медецине! Твой анус подшили и его глубина уменьшилась на целых " + upSize +
-                                "см.\nТеперь она " + size + "см.";
+                        return "Прорыв в медицине! Твой анус подшили и его глубина уменьшилась на целых " + upSize +
+                                "см.\nТеперь он всего лишь " + size + "см.";
                     case 1:
-                        return "Одиночество дало о себе знать, и раны былой любви стали затягиваться.\n" +
-                                "Твое очко затянулось на " + upSize + "см. Теперь его глубина " + size + "см.\n" +
-                                "Возможно завтра тебе повезет больше. Возвращайся и узнаешь?";
+                        return "Одиночество даёт о себе знать, и раны былой любви начинают затягиваться.\n" +
+                                "Твое очко восстановилось на " + upSize + "см, и теперь его глубина " + size + "см.\n" +
+                                "Возможно, завтра тебе повезет больше?";
                     case 2:
-                        return "БУ! Страшно? Нет? А я вижу как твое очко сжалось на " + upSize + "см!\n" +
-                                "Теперь его глубина " + size + "см. Возвращайся завтра, шуганный!";
+                        return "*БУ БЛЯТЬ!* Страшно? Нет? А я вижу как твое очко сжалось на " + upSize + "см!\n" +
+                                "Теперь его глубина " + size + "см. Возвращайся завтра, шуганый!";
+                    case 3:
+                        return "Ты долго сидел на холодной плите, от чего твой анус сжался на " + upSize + "см.\n" +
+                                "Ты заработал геморрой и теперь глубина твоего ануса составляет " + size + "см.\n" +
+                                "В следующий раз попроси мамку купить тебе теплые подштанники!";
                 }
             } else {
-                int messageNumber = Randomizer.getRandomNumberInRange(0, 4);
+                int messageNumber = Randomizer.getRandomNumberInRange(0, 5);
                 switch (messageNumber) {
                     case 0:
-                        return "Твой ♂Dungeon Master♂ вставил ♂finger in your anal♂ и он стал глубже на целых " + upSize + "см. \n" +
-                                "Теперь его глубина " + size + "см. Скоро ты станешь настоящим ♂fucking slaves♂!";
+                        return "Твой *♂Dungeon Master♂* вставил *♂finger in your anal♂* от чего он стал глубже на целых " + upSize + "см. \n" +
+                                "Теперь он " + size + "см. Скоро ты станешь настоящим *♂fucking slave♂*!";
                     case 1:
-                        return "После долгого ♂ANAL FISTING♂, у вас выпала кишка на " + upSize + "см.\n" +
-                                "Теперь очко стало " + size + " сантиметров. Не забывай ♂JUST LUBE IT UP♂.";
+                        return "После долгого *♂ANAL FISTING♂*, у тебя выпала кишка на " + upSize + "см.\n" +
+                                "Теперь твоё очко стало " + size + " см. Не забывай *♂JUST LUBE IT UP♂*.";
                     case 2:
-                        return "Ты случайно подскользнулся в ванной и *СЛУЧАЙНО!* упал на " + Randomizer.getRandomValueFormList(items) +
-                                " длинной " + upSize + "см\nтеперь глубина твоего ануса " + size + "см.\n" +
-                                "Не забывай о каждодневной гигиене и возвращайся завтра.";
+                        return "Ты подскользнулся в ванной и случайно упал на " + Randomizer.getRandomValueFormList(items) +
+                                " длинной " + upSize + "см.\nТеперь глубина твоего ануса " + size + "см.\n" +
+                                "Не забывай о ежедневной гигиене и возвращайся завтра!";
                     case 3:
-                        return "Тебя приняли мусора и посадили на  " + Randomizer.getRandomValueFormList(items) +
-                                " длинной " + upSize + "см\nтеперь глубина твоего ануса " + size + "см.\n" +
-                                "В следующий раз будешь думать, прежде чем пиздить из ашана!";
+                        return "Тебя приняли мусора и посадили на " + Randomizer.getRandomValueFormList(items) +
+                                " длинной " + upSize + "см.\nТеперь глубина твоего ануса " + size + "см.\n" +
+                                "В следующий раз будешь думать башкой прежде чем пиздить из ашана!";
                     case 4:
                         return "Зря ты согласился на этот кастинг...\nВ тебя вставили " + Randomizer.getRandomValueFormList(items) +
-                                " длинной " + upSize + "см\nтеперь глубина твоего ануса " + size + "см.\n" +
-                                "В следующий раз найди нормальную работу.";
+                                " длинной " + upSize + "см.\nТеперь глубина твоего ануса " + size + "см.\n" +
+                                "В следующий раз постарайся найти нормальную работу.";
+                    case 5:
+                        return "*ЧУДОВИЩНЫЙ РАЗРЫВ АНУСА!* Сегодня он стал больше аж на " + upSize + "см!\n" +
+                                "А причина всему - незвестный предмет, подозрительно похожий на " + Randomizer.getRandomValueFormList(items) +
+                                "\nИнтересно, как он там оказался? В любом случае теперь глубина твоего ануса составляет " + size + "см.";
                 }
             }
         }
@@ -146,9 +154,9 @@ public class AnusService implements Roller  {
             number++;
         }
         if (message.toString().equals(""))
-            message = new StringBuilder("Никто ещё не роллил анус");
+            message = new StringBuilder("Пока ещё никто не измерил анус!");
         else
-            message.insert(0, "Топ anal'ов:\n\n");
+            message.insert(0, "Топ анусов:\n\n");
         return message.toString();
     }
 

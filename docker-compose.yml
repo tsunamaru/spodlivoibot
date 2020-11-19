@@ -4,6 +4,9 @@ services:
 
     spodlivoi:
         image: docker.pkg.github.com/tsunamaru/spodlivoibot/ci-build:latest
+        build: 
+          dockerfile: Dockerfile
+          context: .
         environment:
             TELEGRAM_BOT_TOKEN: 
             TELEGRAM_BOT_USERNAME: 
@@ -11,12 +14,12 @@ services:
             SPRING_DATASOURCE_PASSWORD: "${POSTGRES_PASSWORD:-ChangeMeBef0reF!rstRun}"
             SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/spodlivoi
             LOGGING_FILE_NAME: /var/log/spodlivoi.log
-            SPRING_JPA_HIBERNATE_DDL-AUTO: update
         restart: always
         volumes:
           - spodlivoilogs:/var/log
         depends_on:
             - db
+            - redis
 
     db:
         image: postgres:13-alpine
@@ -28,7 +31,14 @@ services:
         volumes:
           - spodlivoidb:/var/lib/postgresql/data/pgdata
         restart: always
+    
+    redis:
+        image: redis:6-alpine
+        volumes:
+          - spodlivoiredis:/data
+        restart: always
 
 volumes:
   spodlivoidb:
   spodlivoilogs: 
+  spodlivoiredis:
