@@ -1,7 +1,7 @@
 package spodlivoi.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -18,17 +18,16 @@ import java.util.List;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class AnusService implements Roller  {
 
-    @Autowired
-    private AnusRepository anusRepository;
+    private final AnusRepository anusRepository;
+    private final BotService bot;
+
     @Value("${telegram.bot.anus.items}")
     private ArrayList<String> items;
     @Value("${debug}")
     private boolean debug;
-    @Autowired
-    private BotService bot;
-
 
     public void roll(Message message, Users user) {
         try {
