@@ -16,7 +16,7 @@ public class Users implements Serializable {
     @Column(name = "id", nullable = false)
     private long id;
     @Basic
-    @Column(name = "user_name", nullable = true, length = 50)
+    @Column(name = "user_name", nullable = false, length = 50)
     private String userName;
     @Basic
     @Column(name = "user_id", nullable = false)

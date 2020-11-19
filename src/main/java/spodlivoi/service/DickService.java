@@ -1,7 +1,7 @@
 package spodlivoi.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -17,16 +17,15 @@ import java.util.List;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class DickService implements Roller {
 
-    @Autowired
-    private DickRepository dickRepository;
+    private final DickRepository dickRepository;
+    private final BotService bot;
 
     @Value("${debug}")
     private boolean debug;
 
-    @Autowired
-    private BotService bot;
 
     public void roll(Message message, Users user) {
         try {
@@ -141,6 +140,7 @@ public class DickService implements Roller {
     public String getTop(List<Users> users) {
         StringBuilder message = new StringBuilder();
         int number = 1;
+        users.removeIf(u -> u.getDick() == null);
         users.sort((d1, d2) -> Integer.compare(d2.getDick().getSize(), d1.getDick().getSize()));
         for(Users user : users){
             message.append(number).append(". ");

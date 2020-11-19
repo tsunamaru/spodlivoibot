@@ -1,10 +1,10 @@
 package spodlivoi.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
@@ -20,6 +20,7 @@ import org.telegram.telegrambots.meta.api.methods.stickers.GetStickerSet;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.inlinequery.inputmessagecontent.InputTextMessageContent;
 import org.telegram.telegrambots.meta.api.objects.inlinequery.result.InlineQueryResult;
 import org.telegram.telegrambots.meta.api.objects.inlinequery.result.InlineQueryResultArticle;
@@ -45,6 +46,7 @@ import java.util.List;
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class BotService extends TelegramLongPollingBot {
 
 
@@ -62,6 +64,8 @@ public class BotService extends TelegramLongPollingBot {
     private String dvachUrl;
     @Value("${telegram.bot.sticker-packs}")
     private ArrayList<String> fightPacks;
+    @Value("${telegram.bot.random-usernames}")
+    private ArrayList<String> userNames;
     @Value("classpath:baby.json")
     private Resource babyFile;
     @Value("classpath:dota.json")
@@ -75,14 +79,10 @@ public class BotService extends TelegramLongPollingBot {
     @Value("${telegram.bot.maxinline}")
     private int maxInlines;
 
-    @Autowired
-    private ChatRepository chatRepository;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private DickService dickService;
-    @Autowired
-    private AnusService anusService;
+    private final ChatRepository chatRepository;
+    private final UserRepository userRepository;
+    private final DickService dickService;
+    private final AnusService anusService;
 
     private final InlineQueryResultArticle article = new InlineQueryResultArticle();
     private final InlineQueryResultArticle article2 = new InlineQueryResultArticle();
@@ -335,10 +335,12 @@ public class BotService extends TelegramLongPollingBot {
     }
 
     private String getRandomCopyPaste(CopypasteType type){
-        assert getJSONCopyPaste(type) != null;
-        int rand = Randomizer.getRandomNumberInRange(0, getJSONCopyPaste(type).length() - 1);
-        assert getJSONCopyPaste(type) != null;
-        return  getJSONCopyPaste(type).getString(rand);
+        JSONArray jsonArray = getJSONCopyPaste(type);
+        if(jsonArray != null) {
+            int rand = Randomizer.getRandomNumberInRange(0, jsonArray.length() - 1);
+            return jsonArray.getString(rand);
+        }else
+            return "Копипасту спиздили армяни!";
     }
 
     private void sendRandomCopypaste(CopypasteType type, Message message){
@@ -636,10 +638,17 @@ public class BotService extends TelegramLongPollingBot {
     Users registerUser(Message message, Chats chat) {
         if (chat == null)
             chat = chatRepository.getByChatId(message.getChatId());
+        User telegramUser = message.getFrom();
         Users user = new Users();
         user.setChat(chat);
-        user.setUserId(message.getFrom().getId());
-        user.setUserName(message.getFrom().getUserName());
+        user.setUserId(telegramUser.getId());
+        user.setUserName(telegramUser.getUserName());
+        if(user.getUserName() == null){
+            user.setUserName(telegramUser.getFirstName());
+        }
+        if(user.getUserName() == null){
+            user.setUserName(Randomizer.getRandomValueFormList(userNames));
+        }
         return userRepository.save(user);
     }
 
