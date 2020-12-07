@@ -2,7 +2,6 @@ package spodlivoi.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -35,6 +34,7 @@ import spodlivoi.entity.Users;
 import spodlivoi.enums.CopypasteType;
 import spodlivoi.repository.ChatRepository;
 import spodlivoi.repository.UserRepository;
+import spodlivoi.utils.LogImpl;
 import spodlivoi.utils.Randomizer;
 
 import javax.annotation.PostConstruct;
@@ -46,7 +46,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-@Slf4j
 @RequiredArgsConstructor
 @Setter
 public class BotService extends TelegramLongPollingBot {
@@ -85,6 +84,7 @@ public class BotService extends TelegramLongPollingBot {
     private final UserRepository userRepository;
     private DickService dickService;
     private AnusService anusService;
+    private LogImpl log;
 
     private final InlineQueryResultArticle article = new InlineQueryResultArticle();
     private final InlineQueryResultArticle article2 = new InlineQueryResultArticle();
@@ -131,8 +131,6 @@ public class BotService extends TelegramLongPollingBot {
         repairArticle.setTitle("ЧИНИ!");
         repairArticle.setInputMessageContent(new InputTextMessageContent().setMessageText("<b>" + "ЧИНИ ".repeat(700) +"</b>")
                 .setParseMode(ParseMode.HTML));
-
-        log.info("Бот запущен");
     }
 
     @Override
@@ -230,30 +228,21 @@ public class BotService extends TelegramLongPollingBot {
                             .setResults(results)
                             .setInlineQueryId(update.getInlineQuery().getId());
                 }
-                try {
-                    execute(answerInlineQuery);
-                } catch (Exception e) {
-
-                    log.error("Error: ", e);
-                }
+                execute(answerInlineQuery);
             }
         } catch (Exception e) {
-            log.error("Error: ", e);
+            log.error(e, update);
         }
     }
 
-    private void sendMessage(Message message, String text){
+    private void sendMessage(Message message, String text) throws TelegramApiException {
         SendMessage sendMessage = new SendMessage().setChatId(message.getChatId());
         sendMessage.setReplyToMessageId(message.getMessageId());
         sendMessage.setText(new String(text.getBytes(), StandardCharsets.UTF_8));
-        try {
-            execute(sendMessage);
-        } catch (TelegramApiException e) {
-            log.error("Error: ", e);
-        }
+        execute(sendMessage);
     }
 
-    private void acceptCommand(Message message){
+    private void acceptCommand(Message message) throws TelegramApiException {
         String messageText = message.getText();
         String command;
         if (messageText.contains("@")) {
@@ -315,15 +304,11 @@ public class BotService extends TelegramLongPollingBot {
         }
     }
 
-    private void deleteMessage(Message message){
-        try {
-            DeleteMessage deleteMessage = new DeleteMessage();
-            deleteMessage.setChatId(message.getChatId());
-            deleteMessage.setMessageId(message.getMessageId());
-            execute(deleteMessage);
-        } catch (TelegramApiException e) {
-            log.error("Error: ", e);
-        }
+    private void deleteMessage(Message message) throws TelegramApiException {
+        DeleteMessage deleteMessage = new DeleteMessage();
+        deleteMessage.setChatId(message.getChatId());
+        deleteMessage.setMessageId(message.getMessageId());
+        execute(deleteMessage);
     }
 
     private JSONArray getJSONCopyPaste(CopypasteType type){
@@ -343,23 +328,18 @@ public class BotService extends TelegramLongPollingBot {
             int rand = Randomizer.getRandomNumberInRange(0, jsonArray.length() - 1);
             return jsonArray.getString(rand);
         }else
-            return "Копипасту спиздили армяни!";
+            return "Копипасту спиздили армяне!";
     }
 
-    private void sendRandomCopypaste(CopypasteType type, Message message){
-
+    private void sendRandomCopypaste(CopypasteType type, Message message) throws TelegramApiException {
         SendMessage sendMessage = new SendMessage().setChatId(message.getChatId());
-        if(message.isReply()){
+        if (message.isReply()) {
             sendMessage.setReplyToMessageId(message.getReplyToMessage().getMessageId());
             deleteMessage(message);
         }
         sendMessage.setParseMode(ParseMode.MARKDOWN);
         sendMessage.setText(getRandomCopyPaste(type));
-        try {
-            execute(sendMessage);
-        } catch (TelegramApiException e) {
-            log.error("Error: ", e);
-        }
+        execute(sendMessage);
     }
 
     public JSONArray  getBThreads() throws IOException {
@@ -372,48 +352,42 @@ public class BotService extends TelegramLongPollingBot {
         return answerArray;
     }
 
-    public String getWebmUrl(){
+    public String getWebmUrl() throws IOException {
         String video = "";
-        try {
-            JSONArray answerArray = getBThreads();
+        JSONArray answerArray = getBThreads();
 
-            String threadNumber = "";
-            for (int i = 0; i < answerArray.length(); i++) {
-                JSONObject postJson = answerArray.getJSONObject(i);
-                String subject = postJson.getString("subject");
-                if (subject.toLowerCase().contains("webm thread") || subject.toLowerCase().contains("webm-thread")
-                        || subject.toLowerCase().contains("цуиь thread") || subject.toLowerCase().contains("цуиь-thread")
-                        || subject.toLowerCase().contains("webm тред") || subject.toLowerCase().contains("webm-тред")
-                        || subject.toLowerCase().contains("цуиь тред") || subject.toLowerCase().contains("цуиь-тред")) {
-                    threadNumber = postJson.getString("num");
-                    break;
-                }
+        String threadNumber = "";
+        for (int i = 0; i < answerArray.length(); i++) {
+            JSONObject postJson = answerArray.getJSONObject(i);
+            String subject = postJson.getString("subject");
+            if (subject.toLowerCase().contains("webm thread") || subject.toLowerCase().contains("webm-thread")
+                    || subject.toLowerCase().contains("цуиь thread") || subject.toLowerCase().contains("цуиь-thread")
+                    || subject.toLowerCase().contains("webm тред") || subject.toLowerCase().contains("webm-тред")
+                    || subject.toLowerCase().contains("цуиь тред") || subject.toLowerCase().contains("цуиь-тред")) {
+                threadNumber = postJson.getString("num");
+                break;
             }
-
-            URL url = new URL("https://2ch.hk/makaba/mobile.fcgi?task=get_thread&board=b&thread="
-                    + threadNumber + "&post=0");
-            HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-            InputStream in = new BufferedInputStream(connection.getInputStream());
-            JSONArray videoPosts = new JSONArray(StreamUtils.copyToString(in, StandardCharsets.UTF_8));
-            in.close();
-
-            while (video.equals("")) {
-                int r = Randomizer.getRandomNumberInRange(0, videoPosts.length() - 1);
-                JSONObject postJson = videoPosts.getJSONObject(r);
-                JSONArray files = postJson.getJSONArray("files");
-                if (!files.isEmpty())
-                    video = "https://2ch.hk" + files.getJSONObject(0).getString("path");
-                if(!video.contains(".webm") && !video.contains(".mp4"))
-                    video = "";
-
-            }
-
-            return video;
-
-        } catch (Exception e) {
-            log.error("Error: ", e);
         }
-        return "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+
+        URL url = new URL("https://2ch.hk/makaba/mobile.fcgi?task=get_thread&board=b&thread="
+                + threadNumber + "&post=0");
+        HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+        InputStream in = new BufferedInputStream(connection.getInputStream());
+        JSONArray videoPosts = new JSONArray(StreamUtils.copyToString(in, StandardCharsets.UTF_8));
+        in.close();
+
+        while (video.equals("")) {
+            int r = Randomizer.getRandomNumberInRange(0, videoPosts.length() - 1);
+            JSONObject postJson = videoPosts.getJSONObject(r);
+            JSONArray files = postJson.getJSONArray("files");
+            if (!files.isEmpty())
+                video = "https://2ch.hk" + files.getJSONObject(0).getString("path");
+            if (!video.contains(".webm") && !video.contains(".mp4"))
+                video = "";
+
+        }
+
+        return video;
     }
 
     private int videoStats = 0;
@@ -422,9 +396,14 @@ public class BotService extends TelegramLongPollingBot {
 
         Thread thread = new Thread(() -> {
             String filename = String.valueOf(Randomizer.getRandomNumberInRange(0, 100000));
-            String video = getWebmUrl();
+            String video = null;
             try {
-                if(video.contains(".webm")){
+                video = getWebmUrl();
+            } catch (IOException e) {
+                log.error(e);
+            }
+            try {
+                if(video != null && video.contains(".webm")){
 
                     try{
                         FileUtils.copyURLToFile(
@@ -442,10 +421,10 @@ public class BotService extends TelegramLongPollingBot {
                                 log.info(s);
                             p.waitFor();
                             p.destroy();
-                        } catch (Exception e) {log.error("Error: ", e);}
+                        } catch (Exception e) {log.error(e);}
 
                     } catch (Exception e) {
-                        log.error("Error: ", e);
+                        log.error(e);
                     }
                     video = "/tmp/" + filename + ".mp4";
                     SendVideo sendVideo = new SendVideo().setChatId(message.getChatId());
@@ -480,7 +459,7 @@ public class BotService extends TelegramLongPollingBot {
                                     log.info(s);
                                 p.waitFor();
                                 p.destroy();
-                            } catch (Exception er) {log.error("Error: ", e);}
+                            } catch (Exception er) {log.error(e);}
                             sendVideo = new SendVideo().setChatId(message.getChatId());
                             sendVideo.setReplyToMessageId(message.getMessageId());
                             sendVideo.setVideo(new File(video));
@@ -499,16 +478,16 @@ public class BotService extends TelegramLongPollingBot {
                         p.waitFor();
                         p.destroy();
                     } catch (Exception e) {
-                        log.error("Error: ", e);
+                        log.error(e);
                     }
-                } else {
+                } else if(video != null) {
                     SendVideo sendVideo = new SendVideo().setChatId(message.getChatId());
                     sendVideo.setReplyToMessageId(message.getMessageId());
                     sendVideo.setVideo(video);
                     execute(sendVideo);
                 }
             } catch (Exception e) {
-                log.error("Error: ", e);
+                log.error(e);
             }
         });
         thread.start();
@@ -570,36 +549,24 @@ public class BotService extends TelegramLongPollingBot {
                             execute(sendMessage);
                     }
                 } catch (TelegramApiException e) {
-                    log.error("Error: ", e);
+                    log.error(e);
                 }
             } catch (Exception e) {
-                log.error("Error: ", e);
+                log.error(e);
             }
         });
         thread.start();
     }
 
-    private StickerSet getFightStickers() {
-        StickerSet stickerSet = null;
-        try {
-            stickerSet = execute(new GetStickerSet(Randomizer.getRandomValueFormList(fightPacks)));
-        } catch (TelegramApiException e) {
-            log.error("Error: ", e);
-        }
-       return stickerSet;
+    private StickerSet getFightStickers() throws TelegramApiException {
+        return execute(new GetStickerSet(Randomizer.getRandomValueFormList(fightPacks)));
     }
 
-    private  StickerSet getStickerSet(String name){
-        StickerSet stickerSet = null;
-        try {
-            stickerSet = execute(new GetStickerSet(name));
-        } catch (TelegramApiException e) {
-            log.error("Error: ", e);
-        }
-        return stickerSet;
+    private  StickerSet getStickerSet(String name) throws TelegramApiException {
+        return execute(new GetStickerSet(name));
     }
 
-    private Sticker getSticker(){
+    private Sticker getSticker() throws TelegramApiException {
         return getSticker(getFightStickers());
     }
 
@@ -610,23 +577,19 @@ public class BotService extends TelegramLongPollingBot {
         return  Randomizer.getRandomValueFormList(stickerSet.getStickers());
     }
 
-    private void sendFightSticker(Message message, boolean reply){
+    private void sendFightSticker(Message message, boolean reply) throws TelegramApiException {
         sendSticker(message, getSticker(), reply);
     }
 
-    private void sendSticker(Message message, Sticker sticker, boolean reply) {
-        if(sticker == null)
+    private void sendSticker(Message message, Sticker sticker, boolean reply) throws TelegramApiException {
+        if (sticker == null)
             return;
         SendSticker sendSticker = new SendSticker();
         sendSticker.setChatId(message.getChatId());
-        if(reply)
+        if (reply)
             sendSticker.setReplyToMessageId(message.getMessageId());
         sendSticker.setSticker(sticker.getFileId());
-        try {
-            execute(sendSticker);
-        } catch (TelegramApiException e) {
-            log.error("Error: ", e);
-        }
+        execute(sendSticker);
     }
 
     public Chats registerChat(Message message) {
@@ -658,27 +621,23 @@ public class BotService extends TelegramLongPollingBot {
 
 
     private void roll(Message message, Roller roller) {
-        try {
-            Chats chat = chatRepository.getByChatId(message.getChatId());
-            if(chat == null)
-                chat = registerChat(message);
-            Users user = userRepository.getByChatIdAndUserId(chat.getId(), message.getFrom().getId());
-            if(user == null)
-                user = registerUser(message, chat);
-            roller.roll(message, user);
-        }catch (Exception e){
-            log.error("Error: ", e);
-        }
+        Chats chat = chatRepository.getByChatId(message.getChatId());
+        if (chat == null)
+            chat = registerChat(message);
+        Users user = userRepository.getByChatIdAndUserId(chat.getId(), message.getFrom().getId());
+        if (user == null)
+            user = registerUser(message, chat);
+        roller.roll(message, user);
     }
 
-    private void getDickTop(Message message){
+    private void getDickTop(Message message) throws TelegramApiException {
         Chats chat = chatRepository.getByChatId(message.getChatId());
         if(chat == null)
             sendMessage(message, "Никто ещё ничего не роллил");
         sendMessage(message, dickService.getTop(userRepository.getAllByChat(chat)));
     }
 
-    private void getAnusTop(Message message){
+    private void getAnusTop(Message message) throws TelegramApiException {
         Chats chat = chatRepository.getByChatId(message.getChatId());
         if(chat == null)
             sendMessage(message, "Никто ещё ничего не роллил");
