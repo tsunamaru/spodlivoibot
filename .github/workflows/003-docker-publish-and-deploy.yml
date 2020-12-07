@@ -64,7 +64,7 @@ jobs:
           export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
           export TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
           export TELEGRAM_BOT_USERNAME=${{ secrets.TELEGRAM_BOT_USERNAME }}
-          export TELEGRAM_BOT_ADMIN-CHAT-ID=${{ secrets.TELEGRAM_BOT_ADMIN_CHAT_ID }}
+          export TELEGRAM_BOT_ADMIN_CHAT_ID=${{ secrets.TELEGRAM_BOT_ADMIN_CHAT_ID }}
 
           docker-compose pull
           docker-compose down || true
