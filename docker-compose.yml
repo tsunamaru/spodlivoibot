@@ -10,6 +10,7 @@ services:
         environment:
             TELEGRAM_BOT_TOKEN: 
             TELEGRAM_BOT_USERNAME: 
+            TELEGRAM_BOT_ADMIN-CHAT-ID: 
             SPRING_DATASOURCE_USERNAME: spodlivoi
             SPRING_DATASOURCE_PASSWORD: "${POSTGRES_PASSWORD:-ChangeMeBef0reF!rstRun}"
             SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/spodlivoi
