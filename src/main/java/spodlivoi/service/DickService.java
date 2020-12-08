@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import spodlivoi.entity.Dicks;
@@ -25,7 +24,7 @@ public class DickService implements Roller {
     private final BotService bot;
 
     @PostConstruct
-    public void init(){
+    public void init() {
         bot.setDickService(this);
     }
 
@@ -33,75 +32,47 @@ public class DickService implements Roller {
     private boolean debug;
 
 
-    public void roll(Message message, Users user) {
-        try {
-
-            Dicks dick = null;
-            boolean first = false;
-            int size = 0;
-            try {
-                dick = user.getDick();
-            } catch (Exception e) {
-                log.error("Error: ", e);
-            }
-            if (dick == null) {
-                dick = new Dicks();
-                dick.setUser(user);
-                first = true;
-            } else {
-                LocalDateTime current = LocalDateTime.now();
-                LocalDateTime last = dick.getLastMeasurement();
-                if (current.getDayOfMonth() == last.getDayOfMonth() &&
-                        current.getMonthValue() == last.getMonthValue() && !debug) {
-                    sendMessage(message, "Ты уже измерял свой огрызок сегодня!\nПриходи через " +
-                            (23 - current.getHour()) + "ч " + (59 - current.getMinute()) + "м");
-                    return;
-                } else
-                    size = dick.getSize();
-            }
-            int upSize = getPlusDickSize();
-            size += upSize;
-            if (size < 0 || upSize == 0)
-                size = 0;
-
-            sendMessage(message, getRollMessage(first, size, upSize));
-
-            dick.setSize(size);
-            dick.setLastMeasurement(LocalDateTime.now());
-            dickRepository.save(dick);
-
-        } catch (Exception e) {
-            log.error("Error: ", e);
-            sendMessage(message, "Произошла какая-то ошибка...");
+    public void roll(Message message, Users user) throws TelegramApiException {
+        boolean first = false;
+        int size = 0;
+        Dicks dick = user.getDick();
+        if (dick == null) {
+            dick = new Dicks();
+            dick.setUser(user);
+            first = true;
+        } else {
+            LocalDateTime current = LocalDateTime.now();
+            LocalDateTime last = dick.getLastMeasurement();
+            if (current.getDayOfMonth() == last.getDayOfMonth() &&
+                    current.getMonthValue() == last.getMonthValue() && !debug) {
+                sendMessage(message, "Ты уже измерял свой огрызок сегодня!\nПриходи через " +
+                        (23 - current.getHour()) + "ч " + (59 - current.getMinute()) + "м", bot);
+                return;
+            } else
+                size = dick.getSize();
         }
-
-    }
-
-    private void sendMessage(Message message, String text) {
-        SendMessage sendMessage = new SendMessage().setChatId(message.getChatId());
-        sendMessage.setReplyToMessageId(message.getMessageId());
-        sendMessage.setText(text);
-        sendMessage.enableMarkdown(true);
-        try {
-            bot.execute(sendMessage);
-        } catch (TelegramApiException e) {
-            log.error("Error: ", e);
-        }
-        log.debug("End roll time: {}", System.currentTimeMillis());
+        int upSize = getPlusDickSize();
+        size += upSize;
+        if (size < 0 || upSize == 0)
+            size = 0;
+        sendMessage(message, getRollMessage(first, size, upSize), bot);
+        dick.setSize(size);
+        dick.setLastMeasurement(LocalDateTime.now());
+        dickRepository.save(dick);
     }
 
     private String getRollMessage(boolean first, int size, int upSize) {
-        if(first){
-            if(size == 0)
+        if (first) {
+            if (size == 0)
                 return "На данный момент ты не имеешь писюна, неудачник!";
             else
                 return "Ого! Размер твоего писюна аж " + size +
                         "см!\nПриходи завтра. Посмотрим, изменился ли он";
-        } else{
+        } else {
             int dickText = Randomizer.getRandomNumberInRange(1, 5);
-            if(size == 0)
+            if (size == 0)
                 return "Мои соболезнования. Сегодня у тебя произошла страшная трагедия: твой писюн отпал.";
-            if(upSize < 0) {
+            if (upSize < 0) {
 
                 switch (dickText) {
                     case 1:
@@ -120,7 +91,7 @@ public class DickService implements Roller {
                         return "Мои спутники зафиксировали уменьшение твоего полового органа на " + Math.abs(upSize) +
                                 "см.\nТеперь его длина " + size + "см.\n*АХАХАХАХАХАХАХ.* Ржу с тебя.";
                 }
-            }else
+            } else
                 switch (dickText) {
                     case 1:
                         return "Поздравляю! Твой член сегодня вырос на целых " + Math.abs(upSize) + "см. \n" +
@@ -148,7 +119,7 @@ public class DickService implements Roller {
         int number = 1;
         users.removeIf(u -> u.getDick() == null);
         users.sort((d1, d2) -> Integer.compare(d2.getDick().getSize(), d1.getDick().getSize()));
-        for(Users user : users){
+        for (Users user : users) {
             message.append(number).append(". ");
             message.append(user.getUserName());
             message.append(" - ").append(user.getDick().getSize()).append("см;\n");
@@ -161,19 +132,19 @@ public class DickService implements Roller {
         return message.toString();
     }
 
-    private int getPlusDickSize(){
+    private int getPlusDickSize() {
         int lucky = Randomizer.getRandomNumberInRange(0, 100);
         if (lucky == 0)
             return 0;
-        else if(lucky < 6)
+        else if (lucky < 6)
             return Randomizer.getRandomNumberInRange(-10, -7);
-        else if(lucky < 21)
+        else if (lucky < 21)
             return Randomizer.getRandomNumberInRange(-7, -3);
-        else if(lucky < 31)
+        else if (lucky < 31)
             return Randomizer.getRandomNumberInRange(-3, -1);
-        else if(lucky < 41)
+        else if (lucky < 41)
             return Randomizer.getRandomNumberInRange(15, 20);
-        else if(lucky < 61)
+        else if (lucky < 61)
             return Randomizer.getRandomNumberInRange(7, 15);
         else
             return Randomizer.getRandomNumberInRange(1, 6);

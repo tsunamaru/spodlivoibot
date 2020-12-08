@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import spodlivoi.entity.Anus;
@@ -20,7 +19,7 @@ import java.util.List;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class AnusService implements Roller  {
+public class AnusService implements Roller {
 
     private final AnusRepository anusRepository;
     private final BotService bot;
@@ -31,61 +30,37 @@ public class AnusService implements Roller  {
     private boolean debug;
 
     @PostConstruct
-    public void init(){
+    public void init() {
         bot.setAnusService(this);
     }
 
-    public void roll(Message message, Users user) {
-        try {
-            Anus anus = null;
-            boolean first = false;
-            int size = 0;
-            try {
-                anus = user.getAnus();
-            } catch (Exception e) {
-                log.error("Error: ", e);
-            }
-            if (anus == null) {
-                anus = new Anus();
-                anus.setUser(user);
-                first = true;
-            } else {
-                LocalDateTime current = LocalDateTime.now();
-                LocalDateTime last = anus.getLastMeasurement();
-                if (current.getDayOfMonth() == last.getDayOfMonth() &&
-                        current.getMonthValue() == last.getMonthValue() && !debug) {
-                    sendMessage(message, "На сегодня достаточно шалить со своим анусом!\nВозвращайся через " +
-                            (23 - current.getHour()) + "ч " + (59 - current.getMinute()) + "м");
-                    return;
-                }else
-                    size = anus.getSize();
-            }
-            int upSize = getPlusAnusSize();
-            size += upSize;
-            if (size < 0 || upSize == 0)
-                size = 0;
-            sendMessage(message, getRollMessage(first, size, upSize));
-            anus.setSize(size);
-            anus.setLastMeasurement(LocalDateTime.now());
-            anusRepository.save(anus);
-
-        } catch (Exception e) {
-            log.error("Error: ", e);
-            sendMessage(message, "Произошла какая-то ошибка...");
+    public void roll(Message message, Users user) throws TelegramApiException {
+        boolean first = false;
+        int size = 0;
+        Anus anus = user.getAnus();
+        if (anus == null) {
+            anus = new Anus();
+            anus.setUser(user);
+            first = true;
+        } else {
+            LocalDateTime current = LocalDateTime.now();
+            LocalDateTime last = anus.getLastMeasurement();
+            if (current.getDayOfMonth() == last.getDayOfMonth() &&
+                    current.getMonthValue() == last.getMonthValue() && !debug) {
+                sendMessage(message, "На сегодня достаточно шалить со своим анусом!\nВозвращайся через " +
+                        (23 - current.getHour()) + "ч " + (59 - current.getMinute()) + "м", bot);
+                return;
+            } else
+                size = anus.getSize();
         }
-    }
-
-    private void sendMessage(Message message, String text) {
-        SendMessage sendMessage = new SendMessage().setChatId(message.getChatId());
-        sendMessage.setReplyToMessageId(message.getMessageId());
-        sendMessage.setText(text);
-        sendMessage.enableMarkdown(true);
-        try {
-            bot.execute(sendMessage);
-        } catch (TelegramApiException e) {
-            log.error("Error: ", e);
-        }
-        log.debug("End roll time: {}", System.currentTimeMillis());
+        int upSize = getPlusAnusSize();
+        size += upSize;
+        if (size < 0 || upSize == 0)
+            size = 0;
+        sendMessage(message, getRollMessage(first, size, upSize), bot);
+        anus.setSize(size);
+        anus.setLastMeasurement(LocalDateTime.now());
+        anusRepository.save(anus);
     }
 
     private String getRollMessage(boolean first, int size, int upSize) {
@@ -166,23 +141,22 @@ public class AnusService implements Roller  {
         return message.toString();
     }
 
-    private int getPlusAnusSize(){
+    private int getPlusAnusSize() {
         int lucky = Randomizer.getRandomNumberInRange(0, 100);
         if (lucky == 0)
             return 0;
-        else if(lucky < 6)
+        else if (lucky < 6)
             return Randomizer.getRandomNumberInRange(-7, -5);
-        else if(lucky < 21)
+        else if (lucky < 21)
             return Randomizer.getRandomNumberInRange(-5, -3);
-        else if(lucky < 31)
+        else if (lucky < 31)
             return Randomizer.getRandomNumberInRange(-3, -1);
-        else if(lucky < 41)
+        else if (lucky < 41)
             return Randomizer.getRandomNumberInRange(5, 10);
-        else if(lucky < 61)
+        else if (lucky < 61)
             return Randomizer.getRandomNumberInRange(2, 5);
         else
             return Randomizer.getRandomNumberInRange(1, 2);
     }
-
 
 }

@@ -34,7 +34,7 @@ import spodlivoi.entity.Users;
 import spodlivoi.enums.CopypasteType;
 import spodlivoi.repository.ChatRepository;
 import spodlivoi.repository.UserRepository;
-import spodlivoi.utils.LogImpl;
+import spodlivoi.utils.Log;
 import spodlivoi.utils.Randomizer;
 
 import javax.annotation.PostConstruct;
@@ -84,7 +84,7 @@ public class BotService extends TelegramLongPollingBot {
     private final UserRepository userRepository;
     private DickService dickService;
     private AnusService anusService;
-    private LogImpl log;
+    private Log log;
 
     private final InlineQueryResultArticle article = new InlineQueryResultArticle();
     private final InlineQueryResultArticle article2 = new InlineQueryResultArticle();
@@ -141,7 +141,9 @@ public class BotService extends TelegramLongPollingBot {
                 if (message.isCommand()) {
                     acceptCommand(message);
                 } else if (message.isReply()) {
-                    if (message.getReplyToMessage().getFrom().getUserName().equals(getBotUsername()))
+                    if (message.getReplyToMessage().getFrom() != null &&
+                            message.getReplyToMessage().getFrom().getUserName() != null &&
+                            message.getReplyToMessage().getFrom().getUserName().equals(getBotUsername()))
                         sendFightSticker(message, true);
                 } else if (message.hasText()) {
                     if (message.getText().contains(getBotUsername()))
@@ -272,10 +274,10 @@ public class BotService extends TelegramLongPollingBot {
                 sendMessage(message, "Я работаю, а твой писюн - нет!");
                 break;
             case "/topdicks":
-                getDickTop(message);
+                getTop(message, dickService);
                 break;
             case "/topanuses":
-                getAnusTop(message);
+                getTop(message, anusService);
                 break;
             case "/bred":
                 sendRandomThread(message);
@@ -400,7 +402,7 @@ public class BotService extends TelegramLongPollingBot {
             try {
                 video = getWebmUrl();
             } catch (IOException e) {
-                log.error(e);
+                log.error(e, message);
             }
             try {
                 if(video != null && video.contains(".webm")){
@@ -421,10 +423,10 @@ public class BotService extends TelegramLongPollingBot {
                                 log.info(s);
                             p.waitFor();
                             p.destroy();
-                        } catch (Exception e) {log.error(e);}
+                        } catch (Exception e) {log.error(e, message);}
 
                     } catch (Exception e) {
-                        log.error(e);
+                        log.error(e, message);
                     }
                     video = "/tmp/" + filename + ".mp4";
                     SendVideo sendVideo = new SendVideo().setChatId(message.getChatId());
@@ -446,7 +448,7 @@ public class BotService extends TelegramLongPollingBot {
                                 try {
                                     execute(sendMessage);
                                 }catch (TelegramApiException err){
-                                    err.printStackTrace();
+                                    log.error(err, message);
                                 }
                                 videoStats++;
                                 p = Runtime.getRuntime().exec(
@@ -459,7 +461,7 @@ public class BotService extends TelegramLongPollingBot {
                                     log.info(s);
                                 p.waitFor();
                                 p.destroy();
-                            } catch (Exception er) {log.error(e);}
+                            } catch (Exception er) {log.error(e, message);}
                             sendVideo = new SendVideo().setChatId(message.getChatId());
                             sendVideo.setReplyToMessageId(message.getMessageId());
                             sendVideo.setVideo(new File(video));
@@ -478,7 +480,7 @@ public class BotService extends TelegramLongPollingBot {
                         p.waitFor();
                         p.destroy();
                     } catch (Exception e) {
-                        log.error(e);
+                        log.error(e, message);
                     }
                 } else if(video != null) {
                     SendVideo sendVideo = new SendVideo().setChatId(message.getChatId());
@@ -487,7 +489,7 @@ public class BotService extends TelegramLongPollingBot {
                     execute(sendVideo);
                 }
             } catch (Exception e) {
-                log.error(e);
+                log.error(e, message);
             }
         });
         thread.start();
@@ -549,10 +551,10 @@ public class BotService extends TelegramLongPollingBot {
                             execute(sendMessage);
                     }
                 } catch (TelegramApiException e) {
-                    log.error(e);
+                    log.error(e, message);
                 }
             } catch (Exception e) {
-                log.error(e);
+                log.error(e, message);
             }
         });
         thread.start();
@@ -620,7 +622,7 @@ public class BotService extends TelegramLongPollingBot {
 
 
 
-    private void roll(Message message, Roller roller) {
+    private void roll(Message message, Roller roller) throws TelegramApiException {
         Chats chat = chatRepository.getByChatId(message.getChatId());
         if (chat == null)
             chat = registerChat(message);
@@ -630,18 +632,11 @@ public class BotService extends TelegramLongPollingBot {
         roller.roll(message, user);
     }
 
-    private void getDickTop(Message message) throws TelegramApiException {
+    private void getTop(Message message, Roller roller) throws TelegramApiException {
         Chats chat = chatRepository.getByChatId(message.getChatId());
         if(chat == null)
             sendMessage(message, "Никто ещё ничего не роллил");
-        sendMessage(message, dickService.getTop(userRepository.getAllByChat(chat)));
-    }
-
-    private void getAnusTop(Message message) throws TelegramApiException {
-        Chats chat = chatRepository.getByChatId(message.getChatId());
-        if(chat == null)
-            sendMessage(message, "Никто ещё ничего не роллил");
-        sendMessage(message, anusService.getTop(userRepository.getAllByChat(chat)));
+        sendMessage(message, roller.getTop(userRepository.getAllByChat(chat)));
     }
 
     @Override
