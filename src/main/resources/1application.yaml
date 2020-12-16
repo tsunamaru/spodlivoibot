@@ -1,0 +1,41 @@
+debug: false
+dvach:
+  url: https://2ch.hk/b/catalog.json
+logging:
+  file:
+    name: spodlivoi.log
+  level:
+    spodlivoi: error
+spring:
+  application:
+    name: spodlivoi_bot
+  datasource:
+    driverClassName: org.postgresql.Driver
+    password: ''
+    url: ''
+    username: ''
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+      naming:
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+    open-in-view: false
+  main:
+    web-application-type: none
+    web-environment: false
+telegram:
+  bot:
+    anus:
+      items: сосиску,мамин дилдак,отчима,мёртвого деда,шампунь,бутылку,банку,балалайку,водку,матрёшку,маркер,кота,кабачок,Абу,Варламова,Навального,Путина,затвердевший от спермы носок,сосульку,голубя,дорожный конус,кораблик из лего,зонт,смартфон ксяоми,вибратор сестры,кандибобер,бревно,руку запада,анимешника,пачку сигарет,чей-то палец,торшер,обезьяну,затвердевшую блевотину,кочергу,вейп,гироскутер,спиннер,член твоего бати,либераху,кукан деда,ногу гаги,папину заботу,елду Харухи-сан,план Сталина,левое дрочило,правое хуепутало,русский залуп,свиной хряк,ватника,двачера,хиккана,ероху,твою ЕОТ,конскую елду,вилку братишки,сладкий хлебушек пахома,бумажный самолётик,патчкорд,линуксоида,куколда,деревянный сук,серебрянный кол,виндузятника,зеро-ту,фекальный сталагмит,ректального карлика,ананас,навальный зяблик,колбаску нигрилы,ролл филадельфию,рыбную палочку,шпикачку прапорщика,нефритовый стержень,эбонитовую палочку,гнома ебучку
+    maxinline: 10
+    sticker-packs: sosatlezhatsosat,fightpics,test228idinaxui,davlyu,gasiki2,durkaebt,daEntoOn,Bodyafleks3,Rjaka228,Stickers_ebat,em_sho,vdyrky,onegaionegai,sp792a9133ad7d0b9144089d7350483d5c_by_stckrRobot,sad_crying_cat
+    token: ''
+    username: ''
+    random-usernames: Макака,Боевой вертолёт,Феминистка,Мамка,Отчим,Школьник,Дрочер
+    admin-chat-id: ''

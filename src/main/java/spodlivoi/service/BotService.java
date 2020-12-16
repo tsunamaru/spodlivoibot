@@ -1,5 +1,6 @@
 package spodlivoi.service;
 
+import io.github.furstenheim.CopyDown;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.apache.commons.io.FileUtils;
@@ -499,50 +500,60 @@ public class BotService extends TelegramLongPollingBot {
         Thread thread = new Thread(() -> {
             String post, photo = "";
             try {
-
-                JSONArray answerArray = getBThreads();
-
-                int r = Randomizer.getRandomNumberInRange(0, answerArray.length() - 1);
-                JSONObject postJson = answerArray.getJSONObject(r);
-                post = postJson.getString("comment");
-                post = post.replaceAll("<br>", "\n");
-                post = post.replaceAll("<b>", "*");
-                post = post.replaceAll("</b>", "*");
-                post = post.replaceAll("<i>", "_");
-                post = post.replaceAll("</i>", "_");
-                post = post.replaceAll("<[a-zA-Z0-9=\\-\".,/_ ]+>", "");
-                post += "\n\nПерейти в тред: https://2ch.hk/b/res/" + answerArray.getJSONObject(r).getString("num")
-                        + ".html";
-
-                post = "<i>" + postJson.getString("date") + "</i>\n\n" +  post;
-                JSONArray files = postJson.getJSONArray("files");
-
-                if(!files.isEmpty()){
-                    photo = "https://2ch.hk/" + files.getJSONObject(0).getString("path");
+                JSONObject postJson = null;
+                String link = null;
+                while (!(photo.contains(".jpg") || photo.contains(".png") || photo.contains(".jpeg"))) {
+                    JSONArray answerArray = getBThreads();
+                    int r = Randomizer.getRandomNumberInRange(0, answerArray.length() - 1);
+                    postJson = answerArray.getJSONObject(r);
+                    link = "https://2ch.hk/b/res/" + answerArray.getJSONObject(r).getString("num")
+                            + ".html";
+                    JSONArray files = postJson.getJSONArray("files");
+                    if (!files.isEmpty()) {
+                        photo = "https://2ch.hk/" + files.getJSONObject(0).getString("path");
+                    }
                 }
+
+                if(postJson == null || link == null) {
+                    log.debug("Not found");
+                    return; //TODO Change this
+                }
+                post = postJson.getString("comment");
+                CopyDown converter = new CopyDown();
+                post = converter.convert(post);
+                post = post.replaceAll("\\*\\*", "*");
+                post = post.replaceAll("__", "_");
+                post = post.replaceAll("\\\\([$&+,:;=?@#|'<>.-^*()%!])", "$1");
+                post += "\n\nПерейти в тред: " + link;
+                post = "_" + postJson.getString("date") + "_\n\n" +  post;
+
 
                 SendMessage sendMessage = null;
                 SendPhoto sendPhoto = null;
 
                 if(photo.equals("")) {
                     sendMessage = new SendMessage().setChatId(message.getChatId());
-                    sendMessage.setParseMode(ParseMode.HTML);
+                    sendMessage.setParseMode(ParseMode.MARKDOWN);
                     sendMessage.setText(post);
                     sendMessage.enableWebPagePreview();
                 }else {
                     sendPhoto = new SendPhoto().setChatId(message.getChatId());
-                    sendPhoto.setParseMode(ParseMode.HTML);
+                    sendPhoto.setParseMode(ParseMode.MARKDOWN);
                     if(post.length() < 1024)
                         sendPhoto.setCaption(post);
                     else{
                         sendMessage = new SendMessage().setChatId(message.getChatId());
-                        sendMessage.setParseMode(ParseMode.HTML);
+                        sendMessage.setParseMode(ParseMode.MARKDOWN);
                         sendMessage.setText(post);
                         sendMessage.enableWebPagePreview();
                     }
                     sendPhoto.setPhoto(photo);
                 }
                 try {
+                    if(sendPhoto != null)
+                        log.debug(sendPhoto.toString());
+                    if(sendMessage != null)
+                        log.debug(sendMessage.toString());
                     if(photo.equals(""))
                         execute(sendMessage);
                     else {
