@@ -40,9 +40,9 @@ dependencies {
 
     compile('com.github.xabgesagtx:telegram-spring-boot-starter:0.22')
 
-    //compile group: 'ws.schild', name: 'jave-all-deps', version: '3.0.1'
-    compile group: 'ws.schild', name: 'jave-core', version: '3.0.1'
-    compile group: 'ws.schild', name: 'jave-nativebin-linux64', version: '3.0.1'
+    compile group: 'ws.schild', name: 'jave-all-deps', version: '3.0.1'
+/*    compile group: 'ws.schild', name: 'jave-core', version: '3.0.1'
+    compile group: 'ws.schild', name: 'jave-nativebin-linux64', version: '3.0.1'*/
 
     compile 'io.github.furstenheim:copy_down:1.0'
 
