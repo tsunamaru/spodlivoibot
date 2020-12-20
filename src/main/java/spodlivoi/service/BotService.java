@@ -1,9 +1,7 @@
 package spodlivoi.service;
 
-import io.github.furstenheim.CopyDown;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.apache.commons.io.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,7 +23,6 @@ import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.inlinequery.inputmessagecontent.InputTextMessageContent;
 import org.telegram.telegrambots.meta.api.objects.inlinequery.result.InlineQueryResult;
 import org.telegram.telegrambots.meta.api.objects.inlinequery.result.InlineQueryResultArticle;
-import org.telegram.telegrambots.meta.api.objects.inlinequery.result.InlineQueryResultVideo;
 import org.telegram.telegrambots.meta.api.objects.inlinequery.result.cached.InlineQueryResultCachedSticker;
 import org.telegram.telegrambots.meta.api.objects.stickers.Sticker;
 import org.telegram.telegrambots.meta.api.objects.stickers.StickerSet;
@@ -33,15 +30,16 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import spodlivoi.entity.Chats;
 import spodlivoi.entity.Users;
 import spodlivoi.enums.CopypasteType;
+import spodlivoi.interactor.DvachInteractor;
 import spodlivoi.repository.ChatRepository;
 import spodlivoi.repository.UserRepository;
 import spodlivoi.utils.Log;
 import spodlivoi.utils.Randomizer;
+import ws.schild.jave.EncoderException;
 
 import javax.annotation.PostConstruct;
-import javax.net.ssl.HttpsURLConnection;
-import java.io.*;
-import java.net.URL;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,8 +60,6 @@ public class BotService extends TelegramLongPollingBot {
     private String botToken;
     @Value("${telegram.bot.username}")
     private String botUserName;
-    @Value("${dvach.url}")
-    private String dvachUrl;
     @Value("${telegram.bot.sticker-packs}")
     private ArrayList<String> fightPacks;
     @Value("${telegram.bot.random-usernames}")
@@ -83,6 +79,7 @@ public class BotService extends TelegramLongPollingBot {
 
     private final ChatRepository chatRepository;
     private final UserRepository userRepository;
+    private final DvachInteractor dvachInteractor;
     private DickService dickService;
     private AnusService anusService;
     private Log log;
@@ -153,37 +150,22 @@ public class BotService extends TelegramLongPollingBot {
             } else if (update.hasInlineQuery()) {
 
                 AnswerInlineQuery answerInlineQuery;
-                if (update.getInlineQuery().getQuery().equals("webm") ||
+                /*if (update.getInlineQuery().getQuery().equals("webm") ||
                         update.getInlineQuery().getQuery().equals("video")) {
                     List<InlineQueryResult> results = new ArrayList<>();
-                    InlineQueryResultVideo randomWeb = new InlineQueryResultVideo();
+                    InlineQueryResultVideo randomWeb = dvachInteractor.getInlineVideo();
                     randomWeb.setId("1");
                     randomWeb.setDescription("Рандомный Webm из /b");
                     randomWeb.setTitle("цуим");
-                    String video = getWebmUrl();
-                    if (video.contains(".webm")) {
-                        InlineQueryResultArticle article = new InlineQueryResultArticle();
-                        article.setId("1");
-                        article.setDescription("Рандомный Webm из /b");
-                        article.setTitle("цуим");
-                        article.setInputMessageContent(new InputTextMessageContent().
-                                setMessageText("Извини, пашеграм не поддерживает webm: " + video));
-                        results.add(article);
-                    } else {
-                        String thumb = video;
-                        thumb = thumb.replaceAll("/b/src/", "/b/thumb/");
-                        thumb = thumb.replaceAll(".mp4", "s.jpg");
-                        randomWeb.setVideoUrl(video);
-                        randomWeb.setThumbUrl(thumb);
-                        randomWeb.setMimeType("video/mp4");
-                        results.add(randomWeb);
-                    }
+                    randomWeb.setMimeType("video/mp4");
+                    results.add(randomWeb);
+
                     answerInlineQuery = new AnswerInlineQuery().setCacheTime(0)
                             .setPersonal(true)
                             .setResults(results)
                             .setInlineQueryId(update.getInlineQuery().getId());
-                } else if (update.getInlineQuery().getQuery().toLowerCase().matches("fight") ||
-                        update.getInlineQuery().getQuery().toLowerCase().matches("боевая") || 
+                } else*/ if (update.getInlineQuery().getQuery().toLowerCase().matches("fight") ||
+                        update.getInlineQuery().getQuery().toLowerCase().matches("боевая") ||
                         update.getInlineQuery().getQuery().toLowerCase().matches("хрю")) {
 
                     int setCount = fightPacks.size();
@@ -245,7 +227,7 @@ public class BotService extends TelegramLongPollingBot {
         execute(sendMessage);
     }
 
-    private void acceptCommand(Message message) throws TelegramApiException {
+    private void acceptCommand(Message message) throws TelegramApiException, InterruptedException, EncoderException, IOException {
         String messageText = message.getText();
         String command;
         if (messageText.contains("@")) {
@@ -281,7 +263,9 @@ public class BotService extends TelegramLongPollingBot {
                 getTop(message, anusService);
                 break;
             case "/bred":
-                sendRandomThread(message);
+                SendPhoto sendPhoto = dvachInteractor.getThread(message.getChatId());
+                sendPhoto.setReplyToMessageId(message.getMessageId());
+                execute(sendPhoto);
                 break;
             case "/shizik":
                 sendRandomCopypaste(CopypasteType.shizik, message);
@@ -299,10 +283,20 @@ public class BotService extends TelegramLongPollingBot {
                 sendRandomCopypaste(CopypasteType.baby, message);
                 break;
             case "/webm":
-                sendRandomWebm(message);
+                sendMessage(message, "Это операция может занять продолжительное время из-за перекодирования видео...");
+                Thread t = new Thread(() -> {
+                    try {
+                        SendVideo sendVideo  = dvachInteractor.getVideo(message.getChatId());
+                        sendVideo.setReplyToMessageId(message.getMessageId());
+                        execute(sendVideo);
+                    } catch (Exception e) {
+                        log.error(e, message);
+                    }
+                });
+                t.start();
                 break;
             case "/videostats":
-                sendMessage(message, "Количество видео в обработке: " + videoStats);
+                sendMessage(message, "Количество видео в обработке: " + dvachInteractor.getVideoStats());
                 break;
         }
     }
@@ -343,232 +337,6 @@ public class BotService extends TelegramLongPollingBot {
         sendMessage.setParseMode(ParseMode.MARKDOWN);
         sendMessage.setText(getRandomCopyPaste(type));
         execute(sendMessage);
-    }
-
-    public JSONArray  getBThreads() throws IOException {
-        URL url = new URL(dvachUrl);
-        HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-        InputStream in = new BufferedInputStream(connection.getInputStream());
-        JSONObject answer = new JSONObject(StreamUtils.copyToString(in, StandardCharsets.UTF_8));
-        JSONArray answerArray = answer.getJSONArray("threads");
-        in.close();
-        return answerArray;
-    }
-
-    public String getWebmUrl() throws IOException {
-        String video = "";
-        JSONArray answerArray = getBThreads();
-
-        String threadNumber = "";
-        for (int i = 0; i < answerArray.length(); i++) {
-            JSONObject postJson = answerArray.getJSONObject(i);
-            String subject = postJson.getString("subject");
-            if (subject.toLowerCase().contains("webm thread") || subject.toLowerCase().contains("webm-thread")
-                    || subject.toLowerCase().contains("цуиь thread") || subject.toLowerCase().contains("цуиь-thread")
-                    || subject.toLowerCase().contains("webm тред") || subject.toLowerCase().contains("webm-тред")
-                    || subject.toLowerCase().contains("цуиь тред") || subject.toLowerCase().contains("цуиь-тред")) {
-                threadNumber = postJson.getString("num");
-                break;
-            }
-        }
-
-        URL url = new URL("https://2ch.hk/makaba/mobile.fcgi?task=get_thread&board=b&thread="
-                + threadNumber + "&post=0");
-        HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-        InputStream in = new BufferedInputStream(connection.getInputStream());
-        JSONArray videoPosts = new JSONArray(StreamUtils.copyToString(in, StandardCharsets.UTF_8));
-        in.close();
-
-        while (video.equals("")) {
-            int r = Randomizer.getRandomNumberInRange(0, videoPosts.length() - 1);
-            JSONObject postJson = videoPosts.getJSONObject(r);
-            JSONArray files = postJson.getJSONArray("files");
-            if (!files.isEmpty())
-                video = "https://2ch.hk" + files.getJSONObject(0).getString("path");
-            if (!video.contains(".webm") && !video.contains(".mp4"))
-                video = "";
-
-        }
-
-        return video;
-    }
-
-    private int videoStats = 0;
-
-    public void sendRandomWebm(final Message message) {
-
-        Thread thread = new Thread(() -> {
-            String filename = String.valueOf(Randomizer.getRandomNumberInRange(0, 100000));
-            String video = null;
-            try {
-                video = getWebmUrl();
-            } catch (IOException e) {
-                log.error(e, message);
-            }
-            try {
-                if(video != null && video.contains(".webm")){
-
-                    try{
-                        FileUtils.copyURLToFile(
-                                new URL(video),
-                                new File("/tmp/" + filename + ".webm"));
-                        Process p;
-                        try {
-                            p = Runtime.getRuntime().exec(
-                                    "ffmpeg -hide_banner -i /tmp/" + filename + ".webm " +
-                                            "-acodec copy -vcodec copy -strict -2 -f mp4 /tmp/" + filename + ".mp4");
-                            BufferedReader br = new BufferedReader(
-                                    new InputStreamReader(p.getInputStream()));
-                            String s;
-                            while ((s = br.readLine()) != null)
-                                log.info(s);
-                            p.waitFor();
-                            p.destroy();
-                        } catch (Exception e) {log.error(e, message);}
-
-                    } catch (Exception e) {
-                        log.error(e, message);
-                    }
-                    video = "/tmp/" + filename + ".mp4";
-                    SendVideo sendVideo = new SendVideo().setChatId(message.getChatId());
-                    sendVideo.setReplyToMessageId(message.getMessageId());
-                    sendVideo.setVideo(new File(video));
-                    try {
-                        execute(sendVideo);
-                    }catch (TelegramApiException e){
-                        if(e.toString().equals("org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException: Error sending video: [400] Bad Request: file must be non-empty")){
-                            Process p;
-                            try {
-                                SendMessage sendMessage = new SendMessage().setChatId(message.getChatId());
-                                sendMessage.setReplyToMessageId(message.getMessageId());
-                                sendMessage.setText("Какой-то уебан закодировал видео в vp8...\nПодожди, мне нужно немного времени чтобы исправить это.");
-                                p = Runtime.getRuntime().exec(
-                                        "rm -rf /tmp/" + filename + ".mp4");
-                                p.waitFor();
-                                p.destroy();
-                                try {
-                                    execute(sendMessage);
-                                }catch (TelegramApiException err){
-                                    log.error(err, message);
-                                }
-                                videoStats++;
-                                p = Runtime.getRuntime().exec(
-                                        "ffmpeg -hide_banner -i /tmp/" + filename + ".webm " +
-                                                "-acodec copy -vcodec libx264 -strict -2 -f mp4 /tmp/" + filename + ".mp4");
-                                BufferedReader br = new BufferedReader(
-                                        new InputStreamReader(p.getInputStream()));
-                                String s;
-                                while ((s = br.readLine()) != null)
-                                    log.info(s);
-                                p.waitFor();
-                                p.destroy();
-                            } catch (Exception er) {log.error(e, message);}
-                            sendVideo = new SendVideo().setChatId(message.getChatId());
-                            sendVideo.setReplyToMessageId(message.getMessageId());
-                            sendVideo.setVideo(new File(video));
-                            execute(sendVideo);
-                            videoStats--;
-                        }
-                    }
-                    Process p;
-                    try {
-                        p = Runtime.getRuntime().exec(
-                                "rm -rf /tmp/" + filename + ".webm");
-                        p.waitFor();
-                        p.destroy();
-                        p = Runtime.getRuntime().exec(
-                                "rm -rf /tmp/" + filename + ".mp4");
-                        p.waitFor();
-                        p.destroy();
-                    } catch (Exception e) {
-                        log.error(e, message);
-                    }
-                } else if(video != null) {
-                    SendVideo sendVideo = new SendVideo().setChatId(message.getChatId());
-                    sendVideo.setReplyToMessageId(message.getMessageId());
-                    sendVideo.setVideo(video);
-                    execute(sendVideo);
-                }
-            } catch (Exception e) {
-                log.error(e, message);
-            }
-        });
-        thread.start();
-    }
-
-    public void sendRandomThread(final Message message){
-        Thread thread = new Thread(() -> {
-            String post, photo = "";
-            try {
-                JSONObject postJson = null;
-                String link = null;
-                while (!(photo.contains(".jpg") || photo.contains(".png") || photo.contains(".jpeg"))) {
-                    JSONArray answerArray = getBThreads();
-                    int r = Randomizer.getRandomNumberInRange(0, answerArray.length() - 1);
-                    postJson = answerArray.getJSONObject(r);
-                    link = "https://2ch.hk/b/res/" + answerArray.getJSONObject(r).getString("num")
-                            + ".html";
-                    JSONArray files = postJson.getJSONArray("files");
-                    if (!files.isEmpty()) {
-                        photo = "https://2ch.hk/" + files.getJSONObject(0).getString("path");
-                    }
-                }
-
-                if(postJson == null || link == null) {
-                    log.debug("Not found");
-                    return; //TODO Change this
-                }
-                post = postJson.getString("comment");
-                CopyDown converter = new CopyDown();
-                post = converter.convert(post);
-                post = post.replaceAll("\\*\\*", "*");
-                post = post.replaceAll("__", "_");
-                post = post.replaceAll("\\\\([$&+,:;=?@#|'<>.-^*()%!])", "$1");
-                post += "\n\nПерейти в тред: " + link;
-                post = "_" + postJson.getString("date") + "_\n\n" +  post;
-
-
-                SendMessage sendMessage = null;
-                SendPhoto sendPhoto = null;
-
-                if(photo.equals("")) {
-                    sendMessage = new SendMessage().setChatId(message.getChatId());
-                    sendMessage.setParseMode(ParseMode.MARKDOWN);
-                    sendMessage.setText(post);
-                    sendMessage.enableWebPagePreview();
-                }else {
-                    sendPhoto = new SendPhoto().setChatId(message.getChatId());
-                    sendPhoto.setParseMode(ParseMode.MARKDOWN);
-                    if(post.length() < 1024)
-                        sendPhoto.setCaption(post);
-                    else{
-                        sendMessage = new SendMessage().setChatId(message.getChatId());
-                        sendMessage.setParseMode(ParseMode.MARKDOWN);
-                        sendMessage.setText(post);
-                        sendMessage.enableWebPagePreview();
-                    }
-                    sendPhoto.setPhoto(photo);
-                }
-                try {
-                    if(sendPhoto != null)
-                        log.debug(sendPhoto.toString());
-                    if(sendMessage != null)
-                        log.debug(sendMessage.toString());
-                    if(photo.equals(""))
-                        execute(sendMessage);
-                    else {
-                        execute(sendPhoto);
-                        if(post.length() >= 1024)
-                            execute(sendMessage);
-                    }
-                } catch (TelegramApiException e) {
-                    log.error(e, message);
-                }
-            } catch (Exception e) {
-                log.error(e, message);
-            }
-        });
-        thread.start();
     }
 
     private StickerSet getFightStickers() throws TelegramApiException {
