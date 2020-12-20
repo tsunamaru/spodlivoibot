@@ -88,11 +88,11 @@ public class DvachInteractorImpl implements DvachInteractor {
                     format = "mp4";
                 else
                     format = "webm";
-                source = "/tmp/" + filename + "." + format;
+                source = "./" + filename + "." + format;
                 FileUtils.copyURLToFile(
                         new URL(video),
                         new File(source));
-                String target = "/tmp/" + filename + "(target).mp4";
+                String target = "./" + filename + "(target).mp4";
                 File sourceVideo = new File(source);
                 File targetVideo = new File(target);
 
@@ -123,7 +123,10 @@ public class DvachInteractorImpl implements DvachInteractor {
                             "rm -rf " + source);
                     p.waitFor();
                     p.destroy();
-                    p = Runtime.getRuntime().exec(
+                } catch (Exception ignored) {
+                }
+                try {
+                    Process p = Runtime.getRuntime().exec(
                             "rm -rf " + target);
                     p.waitFor();
                     p.destroy();
