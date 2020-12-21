@@ -129,10 +129,6 @@ public class DvachInteractorImpl implements DvachInteractor {
                         sourceVideo.delete();
                     } catch (Exception ignored) {
                     }
-                    try {
-                        targetVideo.delete();
-                    } catch (Exception ignored) {
-                    }
 
                     return sendVideo;
                 }
@@ -140,6 +136,15 @@ public class DvachInteractorImpl implements DvachInteractor {
             return null;
         } finally {
             videoStats--;
+        }
+    }
+
+    @Override
+    public void deleteVideo(SendVideo sendVideo){
+        File file = sendVideo.getVideo().getNewMediaFile();
+        try {
+            file.delete();
+        } catch (Exception ignored) {
         }
     }
 

@@ -10,6 +10,7 @@ public interface DvachInteractor {
 
     SendPhoto getThread(String chatId) throws IOException;
     SendVideo getVideo(String chatId) throws IOException, InterruptedException, EncoderException;
+    void deleteVideo(SendVideo sendVideo);
     int getVideoStats();
 
 }

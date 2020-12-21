@@ -305,6 +305,7 @@ public class BotService extends TelegramLongPollingBot {
                         SendVideo sendVideo  = dvachInteractor.getVideo(String.valueOf(message.getChatId()));
                         sendVideo.setReplyToMessageId(message.getMessageId());
                         execute(sendVideo);
+                        dvachInteractor.deleteVideo(sendVideo);
                     } catch (Exception e) {
                         log.error(e, message);
                     }
