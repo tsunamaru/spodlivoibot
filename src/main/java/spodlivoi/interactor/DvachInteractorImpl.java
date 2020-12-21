@@ -102,11 +102,11 @@ public class DvachInteractorImpl implements DvachInteractor {
                 VideoAttributes videoAttributes = new VideoAttributes();
                 videoAttributes.setCodec("libx264");
                 videoAttributes.setX264Profile(X264_PROFILE.BASELINE);
-                videoAttributes.setQuality(20);
+                videoAttributes.setQuality(15);
 
                 AudioAttributes audioAttributes = new AudioAttributes();
                 audioAttributes.setCodec("aac");
-                audioAttributes.setQuality(20);
+                audioAttributes.setQuality(15);
 
                 //Encoding attributes
                 EncodingAttributes attrs = new EncodingAttributes();
