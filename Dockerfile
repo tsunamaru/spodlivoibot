@@ -13,7 +13,6 @@ RUN unzip gradle-${GV}-bin.zip && \
 FROM amazoncorretto:11-alpine
 
 RUN apk add --no-cache -q \
-        ffmpeg \
         tzdata \
     && \
     cp /usr/share/zoneinfo/Europe/Moscow /etc/localtime && \
