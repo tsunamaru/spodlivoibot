@@ -93,11 +93,10 @@ public class DvachInteractorImpl implements DvachInteractor {
                 else
                     format = "webm";
                 source = "/tmp/" + filename + "." + format;
-                FileUtils.copyURLToFile(
-                        new URL(video),
-                        new File(source));
-                String target = "/tmp/" + filename + "(target).mp4";
                 File sourceVideo = new File(source);
+                FileUtils.copyURLToFile(new URL(video), sourceVideo);
+                String target = "/tmp/" + filename + "(target).mp4";
+
                 File targetVideo = new File(target);
 
                 VideoAttributes videoAttributes = new VideoAttributes();
