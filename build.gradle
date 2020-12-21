@@ -38,7 +38,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-log4j2'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
-    compile('com.github.xabgesagtx:telegram-spring-boot-starter:0.22')
+    compile('com.github.xabgesagtx:telegram-spring-boot-starter:0.24')
 
    // compile group: 'ws.schild', name: 'jave-all-deps', version: '3.0.1'
     compile group: 'ws.schild', name: 'jave-core', version: '3.0.1'
