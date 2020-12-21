@@ -8,8 +8,8 @@ import java.io.IOException;
 
 public interface DvachInteractor {
 
-    SendPhoto getThread(Long chatId) throws IOException;
-    SendVideo getVideo(Long chatId) throws IOException, InterruptedException, EncoderException;
+    SendPhoto getThread(String chatId) throws IOException;
+    SendVideo getVideo(String chatId) throws IOException, InterruptedException, EncoderException;
     int getVideoStats();
 
 }

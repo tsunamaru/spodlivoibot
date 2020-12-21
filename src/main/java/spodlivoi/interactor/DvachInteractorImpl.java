@@ -12,6 +12,7 @@ import org.springframework.util.StreamUtils;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.methods.send.SendVideo;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import spodlivoi.utils.Randomizer;
 import ws.schild.jave.Encoder;
 import ws.schild.jave.EncoderException;
@@ -40,7 +41,7 @@ public class DvachInteractorImpl implements DvachInteractor {
     private String dvachUrl;
 
     @Override
-    public SendPhoto getThread(Long chatId) throws IOException {
+    public SendPhoto getThread(String chatId) throws IOException {
         String post, photo = "";
         JSONObject postJson = null;
         String link = null;
@@ -68,15 +69,18 @@ public class DvachInteractorImpl implements DvachInteractor {
         post = "_" + postJson.getString("date") + "_\n\n" + post;
 
 
-        SendPhoto sendPhoto = new SendPhoto().setChatId(chatId);
+        SendPhoto sendPhoto = new SendPhoto();
+        sendPhoto.setChatId(chatId);
         sendPhoto.setParseMode(ParseMode.MARKDOWN);
         sendPhoto.setCaption(post);
-        sendPhoto.setPhoto(photo);
+        InputFile inputFile = new InputFile();
+        inputFile.setMedia(photo);
+        sendPhoto.setPhoto(inputFile);
         return sendPhoto;
     }
 
     @Override
-    public SendVideo getVideo(Long chatId) throws IOException, EncoderException {
+    public SendVideo getVideo(String chatId) throws IOException, EncoderException {
         videoStats++;
         try {
             String filename = String.valueOf(Randomizer.getRandomNumberInRange(0, 100000));
@@ -115,25 +119,24 @@ public class DvachInteractorImpl implements DvachInteractor {
                 Encoder encoder = new Encoder();
                 encoder.encode(new MultimediaObject(sourceVideo), targetVideo, attrs);
 
-                SendVideo sendVideo = new SendVideo();
-                sendVideo.setChatId(chatId);
-                sendVideo.setVideo(targetVideo);
-                try {
-                    Process p = Runtime.getRuntime().exec(
-                            "rm -rf " + source);
-                    p.waitFor();
-                    p.destroy();
-                } catch (Exception ignored) {
-                }
-                try {
-                    Process p = Runtime.getRuntime().exec(
-                            "rm -rf " + target);
-                    p.waitFor();
-                    p.destroy();
-                } catch (Exception ignored) {
-                }
+                if(targetVideo.exists()) {
 
-                return sendVideo;
+                    SendVideo sendVideo = new SendVideo();
+                    sendVideo.setChatId(chatId);
+                    InputFile inputFile = new InputFile();
+                    inputFile.setMedia(targetVideo);
+                    sendVideo.setVideo(inputFile);
+                    try {
+                        sourceVideo.delete();
+                    } catch (Exception ignored) {
+                    }
+                    try {
+                        targetVideo.delete();
+                    } catch (Exception ignored) {
+                    }
+
+                    return sendVideo;
+                }
             }
             return null;
         } finally {

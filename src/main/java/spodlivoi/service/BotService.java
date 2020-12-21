@@ -17,6 +17,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendSticker;
 import org.telegram.telegrambots.meta.api.methods.send.SendVideo;
 import org.telegram.telegrambots.meta.api.methods.stickers.GetStickerSet;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
@@ -127,8 +128,10 @@ public class BotService extends TelegramLongPollingBot {
         repairArticle.setId("6");
         repairArticle.setDescription("");
         repairArticle.setTitle("ЧИНИ!");
-        repairArticle.setInputMessageContent(new InputTextMessageContent().setMessageText("<b>" + "ЧИНИ ".repeat(700) +"</b>")
-                .setParseMode(ParseMode.HTML));
+        InputTextMessageContent inputTextMessageContent = new InputTextMessageContent();
+        inputTextMessageContent.setMessageText("<b>" + "ЧИНИ ".repeat(700) +"</b>");
+        inputTextMessageContent.setParseMode(ParseMode.HTML);
+        repairArticle.setInputMessageContent(inputTextMessageContent);
     }
 
     @Override
@@ -186,32 +189,44 @@ public class BotService extends TelegramLongPollingBot {
                         results.add(q);
                         i++;
                     }
-                    answerInlineQuery = new AnswerInlineQuery().setCacheTime(0)
-                            .setPersonal(true)
-                            .setResults(results)
-                            .setInlineQueryId(update.getInlineQuery().getId());
+                    answerInlineQuery = new AnswerInlineQuery();
+                    answerInlineQuery.setCacheTime(0);
+                    answerInlineQuery.setIsPersonal(true);
+                    answerInlineQuery.setResults(results);
+                    answerInlineQuery.setInlineQueryId(update.getInlineQuery().getId());
                 } else {
                     List<InlineQueryResult> results = new ArrayList<>();
-                    article.setInputMessageContent(new InputTextMessageContent().setMessageText(
-                            getRandomCopyPaste(CopypasteType.olds)).setParseMode(ParseMode.MARKDOWN));
+                    InputTextMessageContent inputTextMessageContent = new InputTextMessageContent();
+                    inputTextMessageContent.setMessageText(getRandomCopyPaste(CopypasteType.olds));
+                    inputTextMessageContent.setParseMode(ParseMode.MARKDOWN);
+                    article.setInputMessageContent(inputTextMessageContent);
                     results.add(article);
-                    article2.setInputMessageContent(new InputTextMessageContent().setMessageText(
-                            getRandomCopyPaste(CopypasteType.dota)).setParseMode(ParseMode.MARKDOWN));
+                    InputTextMessageContent inputTextMessageContent2 = new InputTextMessageContent();
+                    inputTextMessageContent2.setMessageText(getRandomCopyPaste(CopypasteType.dota));
+                    inputTextMessageContent2.setParseMode(ParseMode.MARKDOWN);
+                    article2.setInputMessageContent(inputTextMessageContent2);
                     results.add(article2);
-                    article3.setInputMessageContent(new InputTextMessageContent().setMessageText(
-                            getRandomCopyPaste(CopypasteType.baby)).setParseMode(ParseMode.MARKDOWN));
+                    InputTextMessageContent inputTextMessageContent3 = new InputTextMessageContent();
+                    inputTextMessageContent3.setMessageText(getRandomCopyPaste(CopypasteType.baby));
+                    inputTextMessageContent3.setParseMode(ParseMode.MARKDOWN);
+                    article3.setInputMessageContent(inputTextMessageContent3);
                     results.add(article3);
-                    article4.setInputMessageContent(new InputTextMessageContent().setMessageText(
-                            getRandomCopyPaste(CopypasteType.kolchan)).setParseMode(ParseMode.MARKDOWN));
+                    InputTextMessageContent inputTextMessageContent4 = new InputTextMessageContent();
+                    inputTextMessageContent4.setMessageText(getRandomCopyPaste(CopypasteType.kolchan));
+                    inputTextMessageContent4.setParseMode(ParseMode.MARKDOWN);
+                    article4.setInputMessageContent(inputTextMessageContent4);
                     results.add(article4);
-                    article5.setInputMessageContent(new InputTextMessageContent().setMessageText(
-                            getRandomCopyPaste(CopypasteType.shizik)).setParseMode(ParseMode.MARKDOWN));
+                    InputTextMessageContent inputTextMessageContent5 = new InputTextMessageContent();
+                    inputTextMessageContent5.setMessageText(getRandomCopyPaste(CopypasteType.shizik));
+                    inputTextMessageContent5.setParseMode(ParseMode.MARKDOWN);
+                    article5.setInputMessageContent(inputTextMessageContent5);
                     results.add(article5);
                     results.add(repairArticle);
-                    answerInlineQuery = new AnswerInlineQuery().setCacheTime(0)
-                            .setPersonal(true)
-                            .setResults(results)
-                            .setInlineQueryId(update.getInlineQuery().getId());
+                    answerInlineQuery = new AnswerInlineQuery();
+                    answerInlineQuery.setCacheTime(0);
+                    answerInlineQuery.setIsPersonal(true);
+                    answerInlineQuery.setResults(results);
+                    answerInlineQuery.setInlineQueryId(update.getInlineQuery().getId());
                 }
                 execute(answerInlineQuery);
             }
@@ -221,7 +236,8 @@ public class BotService extends TelegramLongPollingBot {
     }
 
     private void sendMessage(Message message, String text) throws TelegramApiException {
-        SendMessage sendMessage = new SendMessage().setChatId(message.getChatId());
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(String.valueOf(message.getChatId()));
         sendMessage.setReplyToMessageId(message.getMessageId());
         sendMessage.setText(new String(text.getBytes(), StandardCharsets.UTF_8));
         execute(sendMessage);
@@ -263,7 +279,7 @@ public class BotService extends TelegramLongPollingBot {
                 getTop(message, anusService);
                 break;
             case "/bred":
-                SendPhoto sendPhoto = dvachInteractor.getThread(message.getChatId());
+                SendPhoto sendPhoto = dvachInteractor.getThread(String.valueOf(message.getChatId()));
                 sendPhoto.setReplyToMessageId(message.getMessageId());
                 execute(sendPhoto);
                 break;
@@ -286,7 +302,7 @@ public class BotService extends TelegramLongPollingBot {
                 sendMessage(message, "Это операция может занять продолжительное время из-за перекодирования видео...");
                 Thread t = new Thread(() -> {
                     try {
-                        SendVideo sendVideo  = dvachInteractor.getVideo(message.getChatId());
+                        SendVideo sendVideo  = dvachInteractor.getVideo(String.valueOf(message.getChatId()));
                         sendVideo.setReplyToMessageId(message.getMessageId());
                         execute(sendVideo);
                     } catch (Exception e) {
@@ -303,7 +319,7 @@ public class BotService extends TelegramLongPollingBot {
 
     private void deleteMessage(Message message) throws TelegramApiException {
         DeleteMessage deleteMessage = new DeleteMessage();
-        deleteMessage.setChatId(message.getChatId());
+        deleteMessage.setChatId(String.valueOf(message.getChatId()));
         deleteMessage.setMessageId(message.getMessageId());
         execute(deleteMessage);
     }
@@ -329,7 +345,8 @@ public class BotService extends TelegramLongPollingBot {
     }
 
     private void sendRandomCopypaste(CopypasteType type, Message message) throws TelegramApiException {
-        SendMessage sendMessage = new SendMessage().setChatId(message.getChatId());
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(String.valueOf(message.getChatId()));
         if (message.isReply()) {
             sendMessage.setReplyToMessageId(message.getReplyToMessage().getMessageId());
             deleteMessage(message);
@@ -366,10 +383,12 @@ public class BotService extends TelegramLongPollingBot {
         if (sticker == null)
             return;
         SendSticker sendSticker = new SendSticker();
-        sendSticker.setChatId(message.getChatId());
+        sendSticker.setChatId(String.valueOf(message.getChatId()));
         if (reply)
             sendSticker.setReplyToMessageId(message.getMessageId());
-        sendSticker.setSticker(sticker.getFileId());
+        InputFile inputFile = new InputFile();
+        inputFile.setMedia(sticker.getFileId());
+        sendSticker.setSticker(inputFile);
         execute(sendSticker);
     }
 
