@@ -14,7 +14,8 @@ public interface Roller {
     String getTop(List<Users> users);
 
     default void sendMessage(Message message, String text, BotService bot) throws TelegramApiException {
-        SendMessage sendMessage = new SendMessage().setChatId(message.getChatId());
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(String.valueOf(message.getChatId()));
         sendMessage.setReplyToMessageId(message.getMessageId());
         sendMessage.setText(text);
         sendMessage.enableMarkdown(true);
