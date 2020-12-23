@@ -121,8 +121,8 @@ public class DickService implements Roller {
         users.sort((d1, d2) -> Integer.compare(d2.getDick().getSize(), d1.getDick().getSize()));
         for (Users user : users) {
             message.append(number).append(". ");
-            message.append(user.getUserName());
-            message.append(" - ").append(user.getDick().getSize()).append("см;\n");
+            message.append(user.getFirstName()).append(" ").append(user.getLastName());
+            message.append(" - ").append(user.getDick().getSize()).append("см\n");
             number++;
         }
         if (message.toString().equals(""))
