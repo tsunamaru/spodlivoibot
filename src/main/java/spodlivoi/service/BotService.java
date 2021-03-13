@@ -28,6 +28,7 @@ import org.telegram.telegrambots.meta.api.objects.inlinequery.result.cached.Inli
 import org.telegram.telegrambots.meta.api.objects.stickers.Sticker;
 import org.telegram.telegrambots.meta.api.objects.stickers.StickerSet;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
 import spodlivoi.entity.Chats;
 import spodlivoi.entity.Users;
 import spodlivoi.enums.CopypasteType;
@@ -44,6 +45,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
@@ -279,10 +281,15 @@ public class BotService extends TelegramLongPollingBot {
                 getTop(message, anusService);
                 break;
             case "/bred":
-                SendPhoto sendPhoto = dvachInteractor.getThread(String.valueOf(message.getChatId()));
-                sendPhoto.setReplyToMessageId(message.getMessageId());
-                execute(sendPhoto);
-                break;
+                try {
+                    SendPhoto sendPhoto = dvachInteractor.getThread(String.valueOf(message.getChatId()));
+                    sendPhoto.setReplyToMessageId(message.getMessageId());
+                    execute(sendPhoto);
+                    break;
+                }catch (TelegramApiRequestException e){
+                    acceptCommand(message);
+                    break;
+                }
             case "/shizik":
                 sendRandomCopypaste(CopypasteType.shizik, message);
                 break;
@@ -302,7 +309,11 @@ public class BotService extends TelegramLongPollingBot {
                 sendMessage(message, "Это операция может занять продолжительное время из-за перекодирования видео...");
                 Thread t = new Thread(() -> {
                     try {
-                        SendVideo sendVideo  = dvachInteractor.getVideo(String.valueOf(message.getChatId()));
+                        SendVideo sendVideo = dvachInteractor.getVideo(String.valueOf(message.getChatId()));
+                        if (sendVideo == null) {
+                            sendMessage(message, "Абу послал тебя нахуй!");
+                            return;
+                        }
                         sendVideo.setReplyToMessageId(message.getMessageId());
                         execute(sendVideo);
                         dvachInteractor.deleteVideo(sendVideo);
@@ -398,18 +409,21 @@ public class BotService extends TelegramLongPollingBot {
         chat.setChatId(message.getChatId());
         chat.setChatName(message.getChat().getTitle());
         chat = chatRepository.save(chat);
-        registerUser(message, chat);
+        registerUser(message, chat, null);
         return chat;
     }
 
-    Users registerUser(Message message, Chats chat) {
+    Users registerUser(Message message, Chats chat, Users currentUser) {
         if (chat == null)
             chat = chatRepository.getByChatId(message.getChatId());
         User telegramUser = message.getFrom();
-        Users user = new Users();
+        Users user;
+        user = Objects.requireNonNullElseGet(currentUser, Users::new);
         user.setChat(chat);
         user.setUserId(telegramUser.getId());
         user.setUserName(telegramUser.getUserName());
+        user.setFirstName(telegramUser.getFirstName());
+        user.setLastName(telegramUser.getLastName());
         if(user.getUserName() == null){
             user.setUserName(telegramUser.getFirstName());
         }
@@ -427,7 +441,10 @@ public class BotService extends TelegramLongPollingBot {
             chat = registerChat(message);
         Users user = userRepository.getByChatIdAndUserId(chat.getId(), message.getFrom().getId());
         if (user == null)
-            user = registerUser(message, chat);
+            user = registerUser(message, chat, null);
+        if(user.getUpdatedAt() == null || user.getUpdatedAt().isAfter(user.getUpdatedAt().plusDays(1))){
+            registerUser(message, chat, user);
+        }
         roller.roll(message, user);
     }
 

@@ -42,7 +42,7 @@ dependencies {
 
     compile group: 'ws.schild', name: 'jave-core', version: '3.0.1'
     compile group: 'ws.schild', name: 'jave-nativebin-linux64', version: '3.0.1'
-   // compile group: 'ws.schild', name: 'jave-nativebin-win64', version: '3.0.1'
+    compile group: 'ws.schild', name: 'jave-nativebin-win64', version: '3.0.1'
 
     compile 'io.github.furstenheim:copy_down:1.0'
 
@@ -52,13 +52,6 @@ dependencies {
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }
-    testImplementation 'org.springframework.security:spring-security-test'
 
-}
-
-test {
-    useJUnitPlatform {
-        excludeTags 'integration'
-    }
 }
 

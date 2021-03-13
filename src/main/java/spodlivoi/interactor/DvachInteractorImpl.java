@@ -80,7 +80,11 @@ public class DvachInteractorImpl implements DvachInteractor {
     }
 
     @Override
-    public SendVideo getVideo(String chatId) throws IOException, EncoderException {
+    public SendVideo getVideo(String chatId) throws IOException, EncoderException, InterruptedException {
+        while (videoStats >= Runtime.getRuntime().availableProcessors()) {
+            log.info("Все потоки заняты. Ждём 5 секунд");
+            Thread.sleep(5000);
+        }
         videoStats++;
         try {
             String filename = String.valueOf(Randomizer.getRandomNumberInRange(0, 100000));
@@ -118,7 +122,7 @@ public class DvachInteractorImpl implements DvachInteractor {
                 Encoder encoder = new Encoder();
                 encoder.encode(new MultimediaObject(sourceVideo), targetVideo, attrs);
 
-                if(targetVideo.exists()) {
+                if (targetVideo.exists()) {
 
                     SendVideo sendVideo = new SendVideo();
                     sendVideo.setChatId(chatId);
@@ -134,8 +138,12 @@ public class DvachInteractorImpl implements DvachInteractor {
                 }
             }
             return null;
-        } finally {
+        }catch (IOException e){
             videoStats--;
+            return getVideo(chatId);
+        } finally {
+            if(videoStats > 0)
+                videoStats--;
         }
     }
 

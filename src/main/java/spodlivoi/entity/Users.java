@@ -1,9 +1,11 @@
 package spodlivoi.entity;
 
 import lombok.Data;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "polzovatel") // ¯\_(ツ)_/¯
@@ -21,6 +23,8 @@ public class Users implements Serializable {
     @Basic
     @Column(name = "user_id", nullable = false)
     private long userId;
+    private String firstName;
+    private String lastName;
     @ManyToOne
     @JoinColumn(name = "chat", referencedColumnName = "id")
     private Chats chat;
@@ -28,4 +32,6 @@ public class Users implements Serializable {
     private Dicks dick;
     @OneToOne(mappedBy = "user")
     private Anus anus;
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 }
