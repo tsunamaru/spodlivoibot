@@ -130,7 +130,13 @@ public class AnusService implements Roller {
         users.sort((d1, d2) -> Integer.compare(d2.getAnus().getSize(), d1.getAnus().getSize()));
         for (Users user : users) {
             message.append(number).append(". ");
-            message.append(user.getUserName());
+            if(user.getFirstName() == null)
+                message.append(user.getUserName());
+            else {
+                message.append(user.getFirstName());
+                if(user.getLastName() != null)
+                    message.append(" ").append(user.getLastName());
+            }
             message.append(" - ").append(user.getAnus().getSize()).append("см;\n");
             number++;
         }
