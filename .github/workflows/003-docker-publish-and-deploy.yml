@@ -59,7 +59,9 @@ jobs:
 
       - name: Pull and deploy
         run: |
-          curl -O -L https://raw.githubusercontent.com/${{ github.repository }}/master/docker-compose.yml
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+          curl -O -L https://raw.githubusercontent.com/${{ github.repository }}/$VERSION/docker-compose.yml
 
           export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
           export TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
