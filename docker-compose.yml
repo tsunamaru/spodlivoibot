@@ -18,14 +18,12 @@ services:
         logging:
           driver: "json-file"
           options:
-            max-size: 10m
-            max-file: 5
+            max-size: "10m"
+            max-file: "5"
         deploy:
           resources:
             limits:
               cpus: "0.25"
-            reservations:
-              cpus: "0.10"
         restart: always
         volumes:
           - spodlivoilogs:/var/log
