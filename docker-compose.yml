@@ -29,14 +29,6 @@ services:
           - spodlivoilogs:/var/log
         depends_on:
             - db
-            - rabbitmq
-
-    rabbitmq:
-      image: rabbitmq:3-management-alpine
-      volumes:
-        - spodlivoimq:/var/lib/rabbitmq/
-        - spodlivoilogs:/var/log/rabbitmq
-      restart: always
 
     db:
         image: postgres:13-alpine
@@ -52,4 +44,3 @@ services:
 volumes:
   spodlivoidb:
   spodlivoilogs: 
-  spodlivoimq:
