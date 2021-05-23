@@ -1,32 +1,49 @@
-version: '3'
+version: '3.7'
 
 services:
 
     spodlivoi:
-        image: github.com/tsunamaru/spodlivoibot
+        image: docker.pkg.github.com/tsunamaru/spodlivoibot/ci-build:latest
+        build: 
+          dockerfile: Dockerfile
+          context: .
         environment:
-            TELEGRAM_BOT_TOKEN: 866647031:AAHgSWpqnTdST8bUmDTDtOnPfIeaLdH4_kE
-            TELEGRAM_BOT_USERNAME: spodlivoi_bot
-            SPRING_DATASOURCE_USERNAME: spodlivoi 
-            SPRING_DATASOURCE_PASSWORD: aiQuuo0eelaequohNooQuaa3mahShe
+            TELEGRAM_BOT_TOKEN: 
+            TELEGRAM_BOT_USERNAME: 
+            TELEGRAM_BOT_ADMIN-CHAT-ID: ${TELEGRAM_BOT_ADMIN_CHAT_ID}
+            SPRING_DATASOURCE_USERNAME: spodlivoi
+            SPRING_DATASOURCE_PASSWORD: "${POSTGRES_PASSWORD:-ChangeMeBef0reF!rstRun}"
             SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/spodlivoi
             LOGGING_FILE_NAME: /var/log/spodlivoi.log
-            SPRING_JPA_HIBERNATE_DDL-AUTO: update
-        build:
-            dockerfile: ./Dockerfile
-            context: .
-        tty: true
-        stdin_open: true
+        logging:
+          driver: "json-file"
+          options:
+            max-size: 10m
+            max-file: 5
+        deploy:
+          resources:
+            limits:
+              cpus: "0.25"
+            reservations:
+              cpus: "0.10"
         restart: always
         volumes:
           - spodlivoilogs:/var/log
         depends_on:
             - db
+            - rabbitmq
+
+    rabbitmq:
+      image: rabbitmq:3-management-alpine
+      volumes:
+        - spodlivoimq:/var/lib/rabbitmq/
+        - spodlivoilogs:/var/log/rabbitmq
+      restart: always
 
     db:
         image: postgres:13-alpine
         environment:
-            POSTGRES_PASSWORD: aiQuuo0eelaequohNooQuaa3mahShe
+            POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-ChangeMeBef0reF!rstRun}"
             POSTGRES_USER: spodlivoi
             POSTGRES_DB: spodlivoi
             PGDATA: /var/lib/postgresql/data/pgdata
@@ -37,3 +54,4 @@ services:
 volumes:
   spodlivoidb:
   spodlivoilogs: 
+  spodlivoimq:

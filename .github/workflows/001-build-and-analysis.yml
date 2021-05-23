@@ -1,0 +1,49 @@
+name: "Autobuild and analysis with CodeQL"
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [master]
+  schedule:
+    - cron: '0 5 * * 4'
+
+jobs:
+  analyze:
+    name: Build and Analyze
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['java']
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+
+      - run: git checkout HEAD^2
+        if: ${{ github.event_name == 'pull_request' }}
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v1
+        with:
+          languages: ${{ matrix.language }}
+
+      - uses: actions/setup-java@v1
+        with:
+          java-version: '15'
+          java-package: jdk
+          architecture: x64
+      
+      - name: Install Gradle 6.9
+        run: wget https://downloads.gradle-dn.com/distributions/gradle-6.9-bin.zip && unzip gradle-6.9-bin.zip
+      
+      - name: Run Gradle
+        run: ./gradle-6.9/bin/gradle build --no-daemon
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v1

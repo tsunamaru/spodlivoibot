@@ -1,17 +1,12 @@
-buildscript {
-    repositories {
-        jcenter()
-    }
-}
 plugins {
-    id 'org.springframework.boot' version '2.3.2.RELEASE'
-    id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+    id 'org.springframework.boot' version '2.4.5'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'java'
 }
 
 tasks.withType(JavaCompile) {
-    sourceCompatibility = 11
-    targetCompatibility = 11
+    sourceCompatibility = 15
+    targetCompatibility = 15
     options.encoding = 'UTF-8'
 }
 
@@ -33,27 +28,26 @@ repositories {
 
 dependencies {
 
-    compile group: 'org.postgresql', name: 'postgresql', version: '42.2.18'
+    implementation group: 'org.postgresql', name: 'postgresql', version: '42.2.20'
 
-    implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-log4j2'
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    compile('com.github.xabgesagtx:telegram-spring-boot-starter:0.22')
+    implementation 'org.springframework.boot:spring-boot-starter-amqp'
+
+    implementation group: 'com.github.xabgesagtx', name: 'telegram-spring-boot-starter', version: '0.24'
+
+    implementation group: 'ws.schild', name: 'jave-core', version: '3.1.1'
+    implementation group: 'ws.schild', name: 'jave-nativebin-linux64', version: '3.1.1'
+   // implementation group: 'ws.schild', name: 'jave-nativebin-win64', version: '3.0.1'
+
+    implementation 'io.github.furstenheim:copy_down:1.0'
+
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }
-    testImplementation 'org.springframework.security:spring-security-test'
 
-
-}
-
-test {
-    useJUnitPlatform {
-        excludeTags 'integration'
-    }
 }
 

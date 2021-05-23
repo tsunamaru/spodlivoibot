@@ -1,0 +1,47 @@
+user:
+  sticker-packs: sosatlezhatsosat,fightpics,test228idinaxui,davlyu,gasiki2,durkaebt,daEntoOn,Bodyafleks3,Rjaka228,Stickers_ebat,em_sho,vdyrky,onegaionegai,sp792a9133ad7d0b9144089d7350483d5c_by_stckrRobot
+  random-usernames: Макака,Боевой вертолёт,Феминистка,Мамка,Отчим,Школьник,Дрочер
+  anus-items: сосиску,мамин дилдак,отчима,мёртвого деда,шампунь,бутылку,банку,балалайку,водку,матрёшку,маркер,кота,кабачок
+admin:
+  ddos:
+    activated-command: /ddos_activate
+    deactivated-command: /ddos_deactivate
+    button-prefix: ddos_copypaste_
+    select-copypastes: |-
+      Выберите копипасты для атаки:
+    activated: Атака ответами успешно активирована для пользователя %s.
+    deactivated: Атака ответами прекращена для пользователя %s.
+    already-active: Атака ответами уже активна для этого пользователя!
+    already-diactive: Атака ответами уже прекращена для этого пользователя!
+copypaste:
+  commands: /olds,/dota,/shizik,/baby,/kolchan
+random-message:
+  text: |-
+    *ХУЙ БЛЯДЬ!*
+    А нет, это всего лишь *ВЫСЕР ДНЯ* от @%s
+settings:
+  da: Да
+  net: Нет
+  dick-roll: |-
+    Ролл хуя: %s
+  anus-roll: |-
+    Ролл ануса: %s
+  vagina-roll: |-
+    Ролл вагины: %s
+  amputate-dick: Отрезать хуй
+  sew-anus: Зашить анус
+  sew-vagina: Зашить вагину
+  change-gender: Выбрать гендер
+  gender: |-
+    Гендер: %s
+  cancel: Закрыть
+  name: |-
+    *Настройки пользователя %s.*
+    %s
+  dick-size: |-
+    Текущий размер хуя: %d см
+  anus-size: |-
+    Текущий размер ануса: %d см
+  vagina-size: |-
+    Текущий размер вагины: %d см
+  button-prefix: settings_

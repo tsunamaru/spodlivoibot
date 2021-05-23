@@ -1,7 +1,13 @@
 /*
+!/.github
 !/src
+!/utils
+!/gradle.properties
 !/.gitignore
+!/.gitattributes
+!/.dockerignore
 !/build.gradle
 !/docker-compose.yml
 !/Dockerfile
 !/README.md
+!/LICENSE
