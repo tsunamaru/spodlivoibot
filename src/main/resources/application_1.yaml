@@ -1,0 +1,45 @@
+debug: false
+dvach:
+  url: https://2ch.hk/b/catalog.json
+logging:
+  file:
+    name: spodlivoi.log
+  logback:
+    rollingpolicy:
+      max-file-size: 50MB
+spring:
+  application:
+    name: spodlivoi_bot
+  datasource:
+    driverClassName: org.postgresql.Driver
+    password: ''
+    url: ''
+    username: ''
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+      naming:
+        implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    show-sql: false
+    open-in-view: false
+  task:
+    scheduling:
+      pool:
+        size: 20
+    execution:
+      pool:
+        max-size: 20
+  main:
+    web-application-type: none
+    web-environment: false
+telegram:
+  bot:
+    maxinline: 10
+    token: ''
+    username: ''
+    admin-chat-id: ''

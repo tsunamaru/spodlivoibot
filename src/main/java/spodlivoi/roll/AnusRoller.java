@@ -1,8 +1,9 @@
-package spodlivoi.interactor;
+package spodlivoi.roll;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -18,50 +19,17 @@ import java.util.List;
 
 @Component
 @Slf4j
-@RequiredArgsConstructor
-public class AnusRoller implements RollerInteractor {
-
-    private final AnusRepository anusRepository;
-
-    private final TelegramService telegramService;
-
-    @Value("${debug}")
-    private boolean debug;
+public class AnusRoller extends  RollerBase<Anus> {
 
     private final Messages messages;
 
-    public void roll(Message message, Users user) throws TelegramApiException {
-        if(user.getSettings() != null && !user.getSettings().isRollAnus())
-            return;
-        boolean first = false;
-        int size = 0;
-        Anus anus = user.getAnus();
-        if (anus == null) {
-            anus = new Anus();
-            anus.setUser(user);
-            first = true;
-        } else {
-            LocalDateTime current = LocalDateTime.now();
-            LocalDateTime last = anus.getLastMeasurement();
-            if (current.getDayOfMonth() == last.getDayOfMonth() &&
-                    current.getMonthValue() == last.getMonthValue() && !debug) {
-                sendMessage(message, "На сегодня достаточно шалить со своим анусом!\nВозвращайся через " +
-                        (23 - current.getHour()) + "ч " + (59 - current.getMinute()) + "м", telegramService);
-                return;
-            } else
-                size = anus.getSize();
-        }
-        int upSize = getPlusAnusSize();
-        size += upSize;
-        if (size < 0 || upSize == 0)
-            size = 0;
-        sendMessage(message, getRollMessage(first, size, upSize), telegramService);
-        anus.setSize(size);
-        anus.setLastMeasurement(LocalDateTime.now());
-        anusRepository.save(anus);
+    public AnusRoller(AnusRepository repository, Messages messages, TelegramService telegramService) {
+        super((JpaRepository)repository, telegramService);
+        this.messages = messages;
     }
 
-    private String getRollMessage(boolean first, int size, int upSize) {
+    @Override
+    String getRollMessage(boolean first, int size, int upSize) {
         if (first) {
             if (size == 0)
                 return "На данный момент твоя анальная девственность при тебе!";
@@ -122,33 +90,8 @@ public class AnusRoller implements RollerInteractor {
         return "Пиздец...";
     }
 
-    public String getTop(List<Users> users) {
-        StringBuilder message = new StringBuilder();
-        int number = 1;
-        users.removeIf(u -> u.getAnus() == null);
-        users.sort((d1, d2) -> Integer.compare(d2.getAnus().getSize(), d1.getAnus().getSize()));
-        for (Users user : users) {
-            if(user.getSettings() != null && !user.getSettings().isRollAnus())
-                continue;
-            message.append(number).append(". ");
-            if(user.getFirstName() == null)
-                message.append(user.getUserName());
-            else {
-                message.append(user.getFirstName());
-                if(user.getLastName() != null)
-                    message.append(" ").append(user.getLastName());
-            }
-            message.append(" - ").append(user.getAnus().getSize()).append("см;\n");
-            number++;
-        }
-        if (message.toString().equals(""))
-            message = new StringBuilder("Пока ещё никто не измерил анус!");
-        else
-            message.insert(0, "Топ анусов:\n\n");
-        return message.toString();
-    }
-
-    private int getPlusAnusSize() {
+    @Override
+    int getPlusSize() {
         int lucky = Randomizer.getRandomNumberInRange(0, 100);
         if (lucky == 0)
             return 0;
@@ -164,6 +107,21 @@ public class AnusRoller implements RollerInteractor {
             return Randomizer.getRandomNumberInRange(2, 5);
         else
             return Randomizer.getRandomNumberInRange(1, 2);
+    }
+
+    @Override
+    String getName() {
+        return "анус";
+    }
+
+    @Override
+    String getNames() {
+        return "анусов";
+    }
+
+    @Override
+    String getWaitText() {
+        return "На сегодня достаточно шалить со своим анусом!";
     }
 
 }

@@ -1,9 +1,9 @@
-package spodlivoi.interactor;
+package spodlivoi.service;
 
 import org.json.JSONArray;
 import spodlivoi.database.enums.Copypaste;
 
-public interface CopyPasteInteractor {
+public interface CopyPasteService {
 
     JSONArray getJSONCopyPaste(Copypaste copypaste);
 

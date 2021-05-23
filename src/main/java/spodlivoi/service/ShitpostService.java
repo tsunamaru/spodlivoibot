@@ -50,8 +50,8 @@ public class ShitpostService {
     }
 
     private void sendRandomMessage(List<UserMessage> messageList, String chatId){
-        UserMessage randomMessage = Randomizer.getRandomValueFromList(messageList);
-        SendMessage sendMessage = new SendMessage();
+        var randomMessage = Randomizer.getRandomValueFromList(messageList);
+        var sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
         sendMessage.setReplyToMessageId(Integer.valueOf(randomMessage.getMessageId()));
         sendMessage.setParseMode(ParseMode.MARKDOWN);
@@ -60,16 +60,22 @@ public class ShitpostService {
            telegramService.execute(sendMessage);
            trySend = 0;
         } catch (Exception e){
-            log.error("Ошибка отправки высера дня ", e);
-            List<UserMessage> messages = new ArrayList<>(messageList);
-            messages.removeIf(m -> m.getId().toString().equals(randomMessage.getId().toString()));
-            trySend++;
-            if(trySend > 5){
-                log.error("Ошибка отправки высера дня после пяти попыток");
+            try{
+                sendMessage.setReplyToMessageId(null);
+                sendMessage.setText(messages.getRandomMessageTextDeleted(randomMessage.getUser().getUserName()));
                 trySend = 0;
-                return;
+            } catch (Exception err) {
+                log.error("Ошибка отправки высера дня ", err);
+                List<UserMessage> messages = new ArrayList<>(messageList);
+                messages.removeIf(m -> m.getId().toString().equals(randomMessage.getId().toString()));
+                trySend++;
+                if (trySend > 5) {
+                    log.error("Ошибка отправки высера дня после пяти попыток");
+                    trySend = 0;
+                    return;
+                }
+                sendRandomMessage(messageList, chatId);
             }
-            sendRandomMessage(messageList, chatId);
         }
     }
 

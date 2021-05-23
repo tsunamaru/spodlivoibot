@@ -1,4 +1,4 @@
-package spodlivoi.interactor;
+package spodlivoi.dvach;
 
 import org.springframework.scheduling.annotation.Async;
 import org.telegram.telegrambots.meta.api.objects.Message;

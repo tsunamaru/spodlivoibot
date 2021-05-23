@@ -1,7 +1,9 @@
 package spodlivoi.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jms.annotation.JmsListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.AnswerInlineQuery;
@@ -27,11 +29,9 @@ import spodlivoi.database.entity.*;
 import spodlivoi.database.enums.Copypaste;
 import spodlivoi.database.enums.Gender;
 import spodlivoi.database.repository.*;
-import spodlivoi.interactor.CopyPasteInteractor;
-import spodlivoi.interactor.DvachInteractor;
-import spodlivoi.interactor.RollerInteractor;
+import spodlivoi.dvach.DvachInteractor;
+import spodlivoi.roll.RollerInteractor;
 import spodlivoi.message.Messages;
-import spodlivoi.utils.Log;
 import spodlivoi.utils.Randomizer;
 import spodlivoi.utils.StringUtil;
 import ws.schild.jave.EncoderException;
@@ -39,6 +39,7 @@ import ws.schild.jave.EncoderException;
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +48,7 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class BotService {
 
     @Value("${telegram.bot.token}")
@@ -74,9 +76,8 @@ public class BotService {
     private final DvachInteractor dvachInteractor;
     private final UserSettingsRepository userSettingsRepository;
     private final List<RollerInteractor> rollers;
-    private final CopyPasteInteractor copyPasteInteractor;
+    private final CopyPasteService copyPasteService;
     private final Messages messages;
-    private final Log log;
 
     private final InlineQueryResultArticle repairArticle = new InlineQueryResultArticle();
 
@@ -85,20 +86,18 @@ public class BotService {
         repairArticle.setId("228");
         repairArticle.setDescription("");
         repairArticle.setTitle("ЧИНИ!");
-        InputTextMessageContent inputTextMessageContent = new InputTextMessageContent();
+        var inputTextMessageContent = new InputTextMessageContent();
         inputTextMessageContent.setMessageText("<b>" + "ЧИНИ ".repeat(700) +"</b>");
         inputTextMessageContent.setParseMode(ParseMode.HTML);
         repairArticle.setInputMessageContent(inputTextMessageContent);
     }
 
-    //@JmsListener(destination = "podlivaQueue", containerFactory = "myFactory")
-    public void acceptQueue(Update update) throws InterruptedException {
-        acceptUpdateAcync(update);
+    @JmsListener(destination = "podlivaQueue", containerFactory = "myFactory")
+    public void acceptQueue(Update update) throws InterruptedException, TelegramApiException, EncoderException, IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+        acceptUpdate(update);
     }
 
-    @Async
-    public void acceptUpdateAcync(Update update) throws InterruptedException {
-    //    log.debug(String.valueOf(update));
+    public void acceptUpdate(Update update) throws InterruptedException, TelegramApiException, EncoderException, IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         try {
             if (update.hasMessage()) {
                 Message message = update.getMessage();
@@ -129,56 +128,7 @@ public class BotService {
                     }
                 }
             } else if (update.hasInlineQuery()) {
-
-                AnswerInlineQuery answerInlineQuery;
-                if (update.getInlineQuery().getQuery().toLowerCase().matches("fight") ||
-                        update.getInlineQuery().getQuery().toLowerCase().matches("боевая") ||
-                        update.getInlineQuery().getQuery().toLowerCase().matches("хрю")) {
-
-                    int setCount = messages.getFightPacks().size();
-                    int sets = Randomizer.getRandomNumberInRange(1, (int) Math.ceil((double) setCount / (double) maxInlines));
-                    int start = maxInlines * (sets - 1);
-                    int end = maxInlines * sets;
-                    if (setCount < end)
-                        end = setCount;
-                    if (end - start != maxInlines)
-                        start = start + (end - start) - maxInlines;
-                    List<String> packs = messages.getFightPacks().subList(start, end);
-                    List<InlineQueryResult> results = new ArrayList<>();
-                    int i = 1;
-                    for (String pack : packs) {
-                        InlineQueryResultCachedSticker q = new InlineQueryResultCachedSticker();
-                        q.setId(String.valueOf(i));
-                        q.setStickerFileId(getSticker(getStickerSet(pack)).getFileId());
-                        results.add(q);
-                        i++;
-                    }
-                    answerInlineQuery = new AnswerInlineQuery();
-                    answerInlineQuery.setCacheTime(0);
-                    answerInlineQuery.setIsPersonal(true);
-                    answerInlineQuery.setResults(results);
-                    answerInlineQuery.setInlineQueryId(update.getInlineQuery().getId());
-                } else {
-                    List<InlineQueryResult> results = new ArrayList<>();
-                    for(Copypaste copypaste : Copypaste.values()) {
-                        InlineQueryResultArticle article = new InlineQueryResultArticle();
-                        article.setId(String.valueOf(copypaste.getNumber()));
-                        article.setTitle(copypaste.getName());
-                        article.setDescription(copypaste.getDescription());
-                        InputTextMessageContent inputTextMessageContent = new InputTextMessageContent();
-                        inputTextMessageContent.setMessageText(copyPasteInteractor.getRandomCopyPaste(copypaste));
-                        inputTextMessageContent.setParseMode(ParseMode.MARKDOWN);
-                        article.setInputMessageContent(inputTextMessageContent);
-                        results.add(article);
-                    }
-                    results.add(repairArticle);
-                    answerInlineQuery = new AnswerInlineQuery();
-                    answerInlineQuery.setCacheTime(0);
-                    answerInlineQuery.setIsPersonal(true);
-                    answerInlineQuery.setResults(results);
-                    answerInlineQuery.setInlineQueryId(update.getInlineQuery().getId());
-                }
-               telegramService.execute( answerInlineQuery);
+                acceptInlineQuery(update);
             } else if(update.hasCallbackQuery()){
                 acceptCallbackQuery(update.getCallbackQuery());
             }
@@ -187,15 +137,63 @@ public class BotService {
             if(errorString.startsWith(ERROR)){
                 int waitTime = Integer.parseInt(errorString.replaceFirst(ERROR_REGEX, ""));
                 Thread.sleep(waitTime);
-                acceptUpdateAcync(update);
+                acceptUpdate(update);
             }else{
-                log.error(telegramApiException, update);
+                throw telegramApiException;
             }
-        } catch (Exception e){
-            log.error(e, update);
         }
     }
 
+    private void acceptInlineQuery(Update update) throws TelegramApiException {
+        AnswerInlineQuery answerInlineQuery;
+        if (update.getInlineQuery().getQuery().toLowerCase().matches("fight") ||
+                update.getInlineQuery().getQuery().toLowerCase().matches("боевая") ||
+                update.getInlineQuery().getQuery().toLowerCase().matches("хрю")) {
+
+            int setCount = messages.getFightPacks().size();
+            int sets = Randomizer.getRandomNumberInRange(1, (int) Math.ceil((double) setCount / (double) maxInlines));
+            int start = maxInlines * (sets - 1);
+            int end = maxInlines * sets;
+            if (setCount < end)
+                end = setCount;
+            if (end - start != maxInlines)
+                start = start + (end - start) - maxInlines;
+            List<String> packs = messages.getFightPacks().subList(start, end);
+            List<InlineQueryResult> results = new ArrayList<>();
+            int i = 1;
+            for (String pack : packs) {
+                InlineQueryResultCachedSticker q = new InlineQueryResultCachedSticker();
+                q.setId(String.valueOf(i));
+                q.setStickerFileId(getSticker(getStickerSet(pack)).getFileId());
+                results.add(q);
+                i++;
+            }
+            answerInlineQuery = new AnswerInlineQuery();
+            answerInlineQuery.setCacheTime(0);
+            answerInlineQuery.setIsPersonal(true);
+            answerInlineQuery.setResults(results);
+        } else {
+            List<InlineQueryResult> results = new ArrayList<>();
+            for(Copypaste copypaste : Copypaste.values()) {
+                InlineQueryResultArticle article = new InlineQueryResultArticle();
+                article.setId(String.valueOf(copypaste.getNumber()));
+                article.setTitle(copypaste.getName());
+                article.setDescription(copypaste.getDescription());
+                InputTextMessageContent inputTextMessageContent = new InputTextMessageContent();
+                inputTextMessageContent.setMessageText(copyPasteService.getRandomCopyPaste(copypaste));
+                inputTextMessageContent.setParseMode(ParseMode.MARKDOWN);
+                article.setInputMessageContent(inputTextMessageContent);
+                results.add(article);
+            }
+            results.add(repairArticle);
+            answerInlineQuery = new AnswerInlineQuery();
+            answerInlineQuery.setCacheTime(0);
+            answerInlineQuery.setIsPersonal(true);
+            answerInlineQuery.setResults(results);
+        }
+        answerInlineQuery.setInlineQueryId(update.getInlineQuery().getId());
+        telegramService.execute( answerInlineQuery);
+    }
 
     private void sendMessage(Message message, String text, boolean markDown) throws TelegramApiException {
         SendMessage sendMessage = new SendMessage();
@@ -207,7 +205,7 @@ public class BotService {
        telegramService.execute( (sendMessage));
     }
 
-    private void acceptCommand(Message message) throws TelegramApiException, IOException, EncoderException, InterruptedException {
+    private void acceptCommand(Message message) throws TelegramApiException, IOException, EncoderException, InterruptedException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         String messageText = message.getText();
         String command;
         if (messageText.contains("@")) {
@@ -222,9 +220,10 @@ public class BotService {
         }
         if (command.contains("/stats"))
             showStat(message);
+
         switch (command) {
             case "/roll":
-             //   log.debug("Start roll time: {}", System.currentTimeMillis());
+                //   log.debug("Start roll time: {}", System.currentTimeMillis());
                 roll(message);
                 break;
             case "/fight":
@@ -257,7 +256,6 @@ public class BotService {
                 acceptAdminCommand(command, message);
                 break;
         }
-
     }
 
     private void showStat(Message message) throws TelegramApiException {
@@ -554,7 +552,7 @@ public class BotService {
             deleteMessage(message);
         }
         sendMessage.setParseMode(ParseMode.MARKDOWN);
-        sendMessage.setText(copyPasteInteractor.getRandomCopyPaste(type));
+        sendMessage.setText(copyPasteService.getRandomCopyPaste(type));
        telegramService.execute( sendMessage);
     }
 
@@ -655,8 +653,8 @@ public class BotService {
 
     @Async
     void saveUserMessageAsync(Message message){
-        Users user = getUserByMessage(message);
-        UserMessage userMessage = new UserMessage();
+        var user = getUserByMessage(message);
+        var userMessage = new UserMessage();
         userMessage.setUser(user);
         userMessage.setChat(user.getChat());
         userMessage.setMessageId(String.valueOf(message.getMessageId()));

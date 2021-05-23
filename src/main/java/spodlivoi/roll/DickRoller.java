@@ -1,65 +1,28 @@
-package spodlivoi.interactor;
+package spodlivoi.roll;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import spodlivoi.database.entity.Dicks;
 import spodlivoi.database.entity.Users;
 import spodlivoi.database.repository.DickRepository;
 import spodlivoi.service.TelegramService;
 import spodlivoi.utils.Randomizer;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
-public class DickRoller implements RollerInteractor {
-
-    private final DickRepository dickRepository;
-
-    private final TelegramService telegramService;
-
-    @Value("${debug}")
-    private boolean debug;
+public class DickRoller extends RollerBase<Dicks> {
 
 
-    public void roll(Message message, Users user) throws TelegramApiException {
-        if(user.getSettings() != null && !user.getSettings().isRollDick())
-            return;
-        boolean first = false;
-        int size = 0;
-        Dicks dick = user.getDick();
-        if (dick == null) {
-            dick = new Dicks();
-            dick.setUser(user);
-            first = true;
-        } else {
-            LocalDateTime current = LocalDateTime.now();
-            LocalDateTime last = dick.getLastMeasurement();
-            if (current.getDayOfMonth() == last.getDayOfMonth() &&
-                    current.getMonthValue() == last.getMonthValue() && !debug) {
-                sendMessage(message, "Ты уже измерял свой огрызок сегодня!\nПриходи через " +
-                        (23 - current.getHour()) + "ч " + (59 - current.getMinute()) + "м", telegramService);
-                return;
-            } else
-                size = dick.getSize();
-        }
-        int upSize = getPlusDickSize();
-        size += upSize;
-        if (size < 0 || upSize == 0)
-            size = 0;
-        sendMessage(message, getRollMessage(first, size, upSize), telegramService);
-        dick.setSize(size);
-        dick.setLastMeasurement(LocalDateTime.now());
-        dickRepository.save(dick);
+    public DickRoller(DickRepository repository, TelegramService telegramService) {
+        super((JpaRepository)repository, telegramService);
     }
 
-    private String getRollMessage(boolean first, int size, int upSize) {
+
+    @Override
+    String getRollMessage(boolean first, int size, int upSize) {
         if (first) {
             if (size == 0)
                 return "На данный момент ты не имеешь писюна, неудачник!";
@@ -112,33 +75,22 @@ public class DickRoller implements RollerInteractor {
     }
 
     @Override
-    public String getTop(List<Users> users) {
-        StringBuilder message = new StringBuilder();
-        int number = 1;
-        users.removeIf(u -> u.getDick() == null);
-        users.sort((d1, d2) -> Integer.compare(d2.getDick().getSize(), d1.getDick().getSize()));
-        for (Users user : users) {
-            if(user.getSettings() != null && !user.getSettings().isRollDick())
-                continue;
-            message.append(number).append(". ");
-            if(user.getFirstName() == null)
-                message.append(user.getUserName());
-            else {
-                message.append(user.getFirstName());
-                if(user.getLastName() != null)
-                    message.append(" ").append(user.getLastName());
-            }
-            message.append(" - ").append(user.getDick().getSize()).append("см\n");
-            number++;
-        }
-        if (message.toString().equals(""))
-            message = new StringBuilder("Никто ещё не роллил писюн");
-        else
-            message.insert(0, "Топ писюнов:\n\n");
-        return message.toString();
+    String getName() {
+        return "писюн";
     }
 
-    private int getPlusDickSize() {
+    @Override
+    String getNames() {
+        return "писюнов";
+    }
+
+    @Override
+    String getWaitText() {
+        return "Ты уже измерял свой огрызок сегодня!";
+    }
+
+    @Override
+    int getPlusSize() {
         int lucky = Randomizer.getRandomNumberInRange(0, 100);
         if (lucky == 0)
             return 0;

@@ -57,6 +57,13 @@ public class Messages {
         return String.format(randomMessageText, username);
     }
 
+    @Value("${random-message.text-deleted}")
+    private String randomMessageTextDeleted;
+
+    public String getRandomMessageTextDeleted(String username) {
+        return String.format(randomMessageTextDeleted, username);
+    }
+
     @Value("${settings.name}")
     private String settingName;
 

@@ -1,4 +1,4 @@
-package spodlivoi.interactor;
+package spodlivoi.dvach;
 
 import io.github.furstenheim.CopyDown;
 import lombok.RequiredArgsConstructor;

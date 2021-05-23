@@ -1,4 +1,4 @@
-package spodlivoi.interactor;
+package spodlivoi.service;
 
 import lombok.RequiredArgsConstructor;
 import org.json.JSONArray;
@@ -17,7 +17,7 @@ import java.nio.charset.StandardCharsets;
 
 @RequiredArgsConstructor
 @Component
-public class CopyPasteInteractorImpl implements CopyPasteInteractor {
+public class CopyPasteServiceImpl implements CopyPasteService {
 
     private JSONArray baby;
     private JSONArray dota;
