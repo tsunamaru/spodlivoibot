@@ -25,7 +25,7 @@ public abstract class RollerBase<T extends RollerModel> implements RollerInterac
 
     @Override
     public void roll(Message message, Users user) throws TelegramApiException {
-        if (user.getSettings() != null && notHasAccess(user))
+        if (user.getSettings() != null && hasNotAccess(user))
             return;
         var first = false;
         var size = 0;
@@ -59,11 +59,12 @@ public abstract class RollerBase<T extends RollerModel> implements RollerInterac
     public String getTop(List<Users> users) {
         var message = new StringBuilder();
         var number = 1;
-        users.removeIf(u -> u.getAnus() == null);
-        users.sort((d1, d2) -> Integer.compare(d2.getAnus().getSize(), d1.getAnus().getSize()));
+        users.removeIf(u -> getCurrentRollerModel(u) == null);
+        users.sort((d1, d2) -> Integer.compare(getCurrentRollerModel(d2).getSize(), getCurrentRollerModel(d1).getSize()));
         for (Users user : users) {
-            if (user.getSettings() != null && notHasAccess(user))
+            if (user.getSettings() != null && hasNotAccess(user))
                 continue;
+            var rollModel = getCurrentRollerModel(user);
             message.append(number).append(". ");
             if (user.getFirstName() == null)
                 message.append(user.getUserName());
@@ -72,7 +73,7 @@ public abstract class RollerBase<T extends RollerModel> implements RollerInterac
                 if (user.getLastName() != null)
                     message.append(" ").append(user.getLastName());
             }
-            message.append(" - ").append(user.getAnus().getSize()).append("см;\n");
+            message.append(" - ").append(rollModel.getSize()).append("см;\n");
             number++;
         }
         if (message.toString().equals(""))
@@ -117,7 +118,7 @@ public abstract class RollerBase<T extends RollerModel> implements RollerInterac
         throw new IllegalArgumentException();
     }
 
-    private boolean notHasAccess(Users user) {
+    private boolean hasNotAccess(Users user) {
         if (this instanceof AnusRoller)
             return !user.getSettings().isRollAnus();
         if (this instanceof DickRoller)
