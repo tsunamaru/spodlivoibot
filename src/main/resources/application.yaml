@@ -1,21 +1,20 @@
-debug: true
+debug: false
 dvach:
   url: https://2ch.hk/b/catalog.json
 logging:
   file:
     name: spodlivoi.log
-  level:
-    spodlivoi: debug
-    SQL: info
-    sql: info
+  logback:
+    rollingpolicy:
+      max-file-size: 50MB
 spring:
   application:
     name: spodlivoi_bot
   datasource:
     driverClassName: org.postgresql.Driver
-    password: 123456
-    url: jdbc:postgresql://127.0.0.1:5432/spodlivoi
-    username: spodlivoi
+    password: ''
+    url: ''
+    username: ''
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
@@ -27,7 +26,6 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     show-sql: false
-    generate-ddl: true
     open-in-view: false
   task:
     scheduling:
@@ -41,11 +39,7 @@ spring:
     web-environment: false
 telegram:
   bot:
-    anus:
-      items: сосиску,мамин дилдак,отчима,мёртвого деда,шампунь,бутылку,банку,балалайку,водку,матрёшку,маркер,кота,кабачок
     maxinline: 10
-    sticker-packs: sosatlezhatsosat,fightpics,test228idinaxui,davlyu,gasiki2,durkaebt,daEntoOn,Bodyafleks3,Rjaka228,Stickers_ebat,em_sho,vdyrky,onegaionegai,sp792a9133ad7d0b9144089d7350483d5c_by_stckrRobot
-    token: 1180580573:AAH8hVu4BD_FtjlJ5Ttrn3Rk9DldwhfQI94
-    username: spodlivoi_go_bot
-    random-usernames: Макака,Боевой вертолёт,Феминистка,Мамка,Отчим,Школьник,Дрочер
-    admin-chat-id: -1001488702056
+    token: ''
+    username: ''
+    admin-chat-id: ''
