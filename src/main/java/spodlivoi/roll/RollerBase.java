@@ -25,7 +25,7 @@ public abstract class RollerBase<T extends RollerModel> implements RollerInterac
 
     @Override
     public void roll(Message message, Users user) throws TelegramApiException {
-        if (user.getSettings() != null && !user.getSettings().isRollAnus())
+        if (user.getSettings() != null && notHasAccess(user))
             return;
         var first = false;
         var size = 0;
@@ -62,7 +62,7 @@ public abstract class RollerBase<T extends RollerModel> implements RollerInterac
         users.removeIf(u -> u.getAnus() == null);
         users.sort((d1, d2) -> Integer.compare(d2.getAnus().getSize(), d1.getAnus().getSize()));
         for (Users user : users) {
-            if (user.getSettings() != null && !user.getSettings().isRollAnus())
+            if (user.getSettings() != null && notHasAccess(user))
                 continue;
             message.append(number).append(". ");
             if (user.getFirstName() == null)
@@ -114,6 +114,16 @@ public abstract class RollerBase<T extends RollerModel> implements RollerInterac
             return new Dicks();
         if (this instanceof VaginaRoller)
             return new Vagina();
+        throw new IllegalArgumentException();
+    }
+
+    private boolean notHasAccess(Users user) {
+        if (this instanceof AnusRoller)
+            return !user.getSettings().isRollAnus();
+        if (this instanceof DickRoller)
+            return !user.getSettings().isRollDick();
+        if (this instanceof VaginaRoller)
+            return !user.getSettings().isRollVagina();
         throw new IllegalArgumentException();
     }
 
