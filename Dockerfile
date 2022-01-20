@@ -15,7 +15,7 @@ RUN apt update && \
 
 FROM ibm-semeru-runtimes:open-17-jre
 
-ADD https://github.com/tianon/gosu/releases/download/1.12/gosu-amd64 /
+ADD https://github.com/tianon/gosu/releases/download/1.14/gosu-amd64 /
 
 RUN cp /usr/share/zoneinfo/Europe/Moscow /etc/localtime && \
     echo "Europe/Moscow" > /etc/timezone && \
