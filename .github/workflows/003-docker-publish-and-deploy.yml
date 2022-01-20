@@ -70,5 +70,6 @@ jobs:
 
           docker-compose pull
           docker-compose down || true
+          sudo /root/drop_caches.sh
           docker-compose --compatibility up --no-build -d
           docker image prune -f

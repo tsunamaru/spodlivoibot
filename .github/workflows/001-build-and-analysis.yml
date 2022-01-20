@@ -35,15 +35,15 @@ jobs:
 
       - uses: actions/setup-java@v1
         with:
-          java-version: '15'
+          java-version: '17'
           java-package: jdk
           architecture: x64
       
-      - name: Install Gradle 6.9
-        run: wget https://downloads.gradle-dn.com/distributions/gradle-6.9-bin.zip && unzip gradle-6.9-bin.zip
+      - name: Install Gradle 7.3.3
+        run: wget https://downloads.gradle-dn.com/distributions/gradle-7.3.3-bin.zip && unzip gradle-7.3.3-bin.zip
       
       - name: Run Gradle
-        run: ./gradle-6.9/bin/gradle build --no-daemon
+        run: ./gradle-7.3.3/bin/gradle build --no-daemon
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v1
