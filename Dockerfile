@@ -7,8 +7,11 @@ ENV JAVA_OPTS="-Dfile.encoding=UTF-8"
 ADD https://downloads.gradle-dn.com/distributions/gradle-${GV}-bin.zip /workspace
 WORKDIR /workspace
 
-RUN apt update && \
-    apt install unzip -y && \
+RUN apt update -qq && \
+    apt install -y \
+        binutils \
+        unzip \
+    && \
     unzip gradle-${GV}-bin.zip && \
     rm -f gradle-${GV}-bin.zip && \
     ./gradle-${GV}/bin/gradle assemble --no-daemon
