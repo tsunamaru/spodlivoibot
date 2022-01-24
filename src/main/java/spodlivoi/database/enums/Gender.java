@@ -6,7 +6,7 @@ import spodlivoi.utils.Randomizer;
 
 @RequiredArgsConstructor
 public enum Gender {
-
+    @Deprecated
     DEFAULT("По умолчанию"),
     MALE("Мужской"),
     FEMALE("Женский"),
@@ -15,14 +15,15 @@ public enum Gender {
     @Getter
     private final String name;
 
-    public static Gender getRandomGender(){
+    public static Gender getRandomGender() {
         int random = Randomizer.getRandomNumberInRange(1, 100);
-        if(random <= 45)
+        if (random <= 45) {
             return MALE;
-        else if(random <= 90)
+        } else if (random <= 90) {
             return FEMALE;
-        else
+        } else {
             return FIGHT_HELICOPTER;
+        }
     }
 
 }

@@ -1,15 +1,13 @@
 package spodlivoi.dvach;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.github.furstenheim.CopyDown;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StreamUtils;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
@@ -17,22 +15,23 @@ import org.telegram.telegrambots.meta.api.methods.send.SendVideo;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
 import spodlivoi.service.TelegramService;
 import spodlivoi.utils.Randomizer;
 import ws.schild.jave.Encoder;
 import ws.schild.jave.MultimediaObject;
+import ws.schild.jave.encode.ArgType;
 import ws.schild.jave.encode.AudioAttributes;
 import ws.schild.jave.encode.EncodingAttributes;
+import ws.schild.jave.encode.ValueArgument;
 import ws.schild.jave.encode.VideoAttributes;
 import ws.schild.jave.encode.enums.X264_PROFILE;
 
-import javax.net.ssl.HttpsURLConnection;
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -40,30 +39,28 @@ import java.nio.charset.StandardCharsets;
 public class DvachInteractorImpl implements DvachInteractor {
 
     private final TelegramService telegramService;
+    private final DvachClient dvachClient;
 
     private int videoStats = 0;
-
-    @Value("${dvach.url}")
-    private String dvachUrl;
 
     @Override
     @Async
     public void sendThreadAsync(Message message) throws IOException, TelegramApiException {
         String post, photo = "";
-        JSONObject postJson = null;
+        JsonNode postJson = null;
         String link = null;
         while (!(photo.contains(".jpg") || photo.contains(".png") || photo.contains(".jpeg"))) {
-            JSONArray answerArray = getBThreads();
-            int r = Randomizer.getRandomNumberInRange(0, answerArray.length() - 1);
-            postJson = answerArray.getJSONObject(r);
-            link = "https://2ch.hk/b/res/" + answerArray.getJSONObject(r).getString("num")
+            var answerArray = getBThreads();
+            int r = Randomizer.getRandomNumberInRange(0, answerArray.size() - 1);
+            postJson = answerArray.get(r);
+            link = "https://2ch.hk/b/res/" + answerArray.get(r).get("num").asText()
                     + ".html";
-            JSONArray files = postJson.getJSONArray("files");
+            var files = (ArrayNode) postJson.get("files");
             if (!files.isEmpty()) {
-                photo = "https://2ch.hk/" + files.getJSONObject(0).getString("path");
+                photo = "https://2ch.hk/" + files.get(0).get("path").asText();
             }
         }
-        post = postJson.getString("comment");
+        post = postJson.get("comment").asText();
         CopyDown converter = new CopyDown();
         post = converter.convert(post);
         post = post.replaceAll("\\*\\*", "*");
@@ -73,7 +70,7 @@ public class DvachInteractorImpl implements DvachInteractor {
             post = post.substring(0, 900) + "...";
         }
         post += "\n\nПерейти в тред: " + link;
-        post = "_" + postJson.getString("date") + "_\n\n" + post;
+        post = "_" + postJson.get("date").asText() + "_\n\n" + post;
 
 
         SendPhoto sendPhoto = new SendPhoto();
@@ -84,7 +81,7 @@ public class DvachInteractorImpl implements DvachInteractor {
         InputFile inputFile = new InputFile();
         inputFile.setMedia(photo);
         sendPhoto.setPhoto(inputFile);
-       telegramService.execute( sendPhoto);
+        telegramService.execute(sendPhoto);
     }
 
     @Override
@@ -96,10 +93,11 @@ public class DvachInteractorImpl implements DvachInteractor {
             if (video != null) {
                 String source;
                 String format;
-                if (video.contains(".mp4"))
+                if (video.contains(".mp4")) {
                     format = "mp4";
-                else
+                } else {
                     format = "webm";
+                }
                 source = "/tmp/" + filename + "." + format;
                 File sourceVideo = new File(source);
                 FileUtils.copyURLToFile(new URL(video), sourceVideo);
@@ -107,19 +105,20 @@ public class DvachInteractorImpl implements DvachInteractor {
 
                 File targetVideo = new File(target);
                 convertAndSendVideoAsync(message, sourceVideo, targetVideo, format);
-            }else{
+            } else {
                 SendMessage sendMessage = SendMessage.builder()
                         .chatId(String.valueOf(message.getChatId()))
                         .replyToMessageId(message.getMessageId())
                         .text("Абу спиздил все шебм с двачей...")
                         .build();
-               telegramService.execute( sendMessage);
+                telegramService.execute(sendMessage);
             }
-        }catch (IOException | TelegramApiException e){
+        } catch (IOException | TelegramApiException e) {
             sendVideoAsync(message);
         } finally {
-            if(videoStats > 0)
+            if (videoStats > 0) {
                 videoStats--;
+            }
         }
     }
 
@@ -134,22 +133,28 @@ public class DvachInteractorImpl implements DvachInteractor {
             videoStats++;
             VideoAttributes videoAttributes = new VideoAttributes();
             videoAttributes.setCodec("libx264");
-            videoAttributes.setX264Profile(X264_PROFILE.BASELINE);
+            videoAttributes.setX264Profile(X264_PROFILE.MAIN);
             videoAttributes.setQuality(15);
+            videoAttributes.setFaststart(true);
 
             AudioAttributes audioAttributes = new AudioAttributes();
             audioAttributes.setCodec("aac");
+            audioAttributes.setChannels(2);
             audioAttributes.setQuality(15);
 
             //Encoding attributes
             EncodingAttributes attrs = new EncodingAttributes();
             attrs.setInputFormat(format);
+            attrs.setMapMetaData(false);
             attrs.setOutputFormat("mp4");
             attrs.setVideoAttributes(videoAttributes);
             attrs.setAudioAttributes(audioAttributes);
 
             //Encode
+            Encoder.addOptionAtIndex(new ValueArgument(ArgType.OUTFILE, "-vf", ea ->
+                    Optional.of("pad=ceil(iw/2)*2:ceil(ih/2)*2")), 30);
             Encoder encoder = new Encoder();
+
             encoder.encode(new MultimediaObject(sourceVideo), targetVideo, attrs);
 
             if (targetVideo.exists()) {
@@ -161,22 +166,46 @@ public class DvachInteractorImpl implements DvachInteractor {
                 inputFile.setMedia(targetVideo);
                 sendVideo.setVideo(inputFile);
 
-               telegramService.execute( sendVideo);
-                if (sourceVideo.exists())
+                telegramService.execute(sendVideo);
+                if (sourceVideo.exists()) {
                     sourceVideo.delete();
-                if (targetVideo.exists())
+                }
+                if (targetVideo.exists()) {
                     targetVideo.delete();
+                }
                 deleteVideo(sendVideo);
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
             log.error("Ошибка при обработке видео", e);
-        }finally {
-            if (videoStats > 0)
+
+            var errorMessage = new SendMessage();
+            errorMessage.setChatId(String.valueOf(message.getChatId()));
+            errorMessage.setReplyToMessageId(message.getMessageId());
+            if (e instanceof TelegramApiRequestException) {
+                if (e.getMessage().contains("Request Entity Too Large")) {
+                    errorMessage.setText(
+                            new String("Выходное видео слишком большое. Ты что собрался пихать его в зад?".getBytes(),
+                                    StandardCharsets.UTF_8));
+                } else {
+                    errorMessage.setText(new String("Телеграм забанил  bnjujdjt видео, поэтому иди нахуй".getBytes(),
+                            StandardCharsets.UTF_8));
+                }
+            } else {
+                errorMessage.setText(
+                        new String("А за щеку тебе не перекодировать?".getBytes(), StandardCharsets.UTF_8));
+            }
+            try {
+                telegramService.execute(errorMessage);
+            } catch (Exception ignore) {
+            }
+        } finally {
+            if (videoStats > 0) {
                 videoStats--;
+            }
         }
     }
 
-    private void deleteVideo(SendVideo sendVideo){
+    private void deleteVideo(SendVideo sendVideo) {
         File file = sendVideo.getVideo().getNewMediaFile();
         try {
             file.delete();
@@ -184,54 +213,44 @@ public class DvachInteractorImpl implements DvachInteractor {
         }
     }
 
-    private JSONArray getBThreads() throws IOException {
-        URL url = new URL(dvachUrl);
-        HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-        InputStream in = new BufferedInputStream(connection.getInputStream());
-        JSONObject answer = new JSONObject(StreamUtils.copyToString(in, StandardCharsets.UTF_8));
-        JSONArray answerArray = answer.getJSONArray("threads");
-        in.close();
-        return answerArray;
+    private ArrayNode getBThreads() throws IOException {
+        JsonNode answer = dvachClient.getThreads();
+        return ((ArrayNode) answer.get("threads"));
     }
-
 
 
     private String getWebmUrl() throws IOException {
         String video = "";
-        JSONArray answerArray = getBThreads();
+        var answerArray = getBThreads();
 
         String threadNumber = "";
-        for (int i = 0; i < answerArray.length(); i++) {
-            JSONObject postJson = answerArray.getJSONObject(i);
-            String subject = postJson.getString("subject");
+        for (int i = 0; i < answerArray.size(); i++) {
+            JsonNode postJson = answerArray.get(i);
+            String subject = postJson.get("subject").asText();
             if (subject.toLowerCase().contains("webm thread") || subject.toLowerCase().contains("webm-thread")
                     || subject.toLowerCase().contains("цуиь thread") || subject.toLowerCase().contains("цуиь-thread")
                     || subject.toLowerCase().contains("webm тред") || subject.toLowerCase().contains("webm-тред")
                     || subject.toLowerCase().contains("цуиь тред") || subject.toLowerCase().contains("цуиь-тред")) {
-                threadNumber = postJson.getString("num");
+                threadNumber = postJson.get("num").asText();
                 break;
             }
         }
-        if(threadNumber.isEmpty() || threadNumber.isBlank()){
+        if (threadNumber.isEmpty() || threadNumber.isBlank()) {
             return null;
         }
 
-        URL url = new URL("https://2ch.hk/makaba/mobile.fcgi?task=get_thread&board=b&thread="
-                + threadNumber + "&post=0");
-        HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
-        InputStream in = new BufferedInputStream(connection.getInputStream());
-        String json = StreamUtils.copyToString(in, StandardCharsets.UTF_8);
-        JSONArray videoPosts = new JSONArray(json);
-        in.close();
+        var videoPosts = dvachClient.getThread(threadNumber);
 
         while (video.equals("")) {
-            int r = Randomizer.getRandomNumberInRange(0, videoPosts.length() - 1);
-            JSONObject postJson = videoPosts.getJSONObject(r);
-            JSONArray files = postJson.getJSONArray("files");
-            if (!files.isEmpty())
-                video = "https://2ch.hk" + files.getJSONObject(0).getString("path");
-            if (!video.contains(".webm") && !video.contains(".mp4"))
+            int r = Randomizer.getRandomNumberInRange(0, videoPosts.size() - 1);
+            var postJson = videoPosts.get(r);
+            var files = (ArrayNode) postJson.get("files");
+            if (!files.isEmpty()) {
+                video = "https://2ch.hk" + files.get(0).get("path").asText();
+            }
+            if (!video.contains(".webm") && !video.contains(".mp4")) {
                 video = "";
+            }
 
         }
 

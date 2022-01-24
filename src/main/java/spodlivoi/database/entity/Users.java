@@ -1,19 +1,37 @@
 package spodlivoi.database.entity;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import javax.persistence.*;
+import javax.persistence.Basic;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity
 @Table(name = "polzovatel") // ¯\_(ツ)_/¯
-@Data
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
 public class Users implements Serializable {
 
     @Id
-    @GeneratedValue(strategy=GenerationType.SEQUENCE, generator = "user_id_generator")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_id_generator")
     @SequenceGenerator(name = "user_id_generator", sequenceName = "user_id_generator_seq", allocationSize = 1)
     @Column(name = "id", nullable = false)
     private long id;
@@ -38,4 +56,21 @@ public class Users implements Serializable {
     private UserSettings settings;
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) {
+            return false;
+        }
+        Users users = (Users) o;
+        return Objects.equals(id, users.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

@@ -10,8 +10,11 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<Users, Integer> {
 
     Optional<Users> getByChatIdAndUserName(long chatId, String username);
+
     Users getByChatIdAndUserId(long chatId, long userId);
+
     List<Users> getAllByChat(Chats chat);
+
     List<Users> getByUserId(long userId);
 }
 

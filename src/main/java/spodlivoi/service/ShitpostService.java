@@ -35,8 +35,9 @@ public class ShitpostService {
             for (Chats chat : chatRepository.findAll()) {
                 try {
                     List<UserMessage> messageList = userMessageRepository.findAllByChat(chat);
-                    if (messageList.isEmpty())
+                    if (messageList.isEmpty()) {
                         continue;
+                    }
                     sendRandomMessage(messageList, String.valueOf(chat.getChatId()));
                 } catch (Exception e) {
                     log.error("Ошибка получения сообщения дня ", e);
@@ -49,7 +50,7 @@ public class ShitpostService {
         }
     }
 
-    private void sendRandomMessage(List<UserMessage> messageList, String chatId){
+    private void sendRandomMessage(List<UserMessage> messageList, String chatId) {
         var randomMessage = Randomizer.getRandomValueFromList(messageList);
         var sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
@@ -57,10 +58,10 @@ public class ShitpostService {
         sendMessage.setParseMode(ParseMode.MARKDOWN);
         sendMessage.setText(messages.getRandomMessageText(randomMessage.getUser().getUserName()));
         try {
-           telegramService.execute(sendMessage);
-           trySend = 0;
-        } catch (Exception e){
-            try{
+            telegramService.execute(sendMessage);
+            trySend = 0;
+        } catch (Exception e) {
+            try {
                 sendMessage.setReplyToMessageId(null);
                 sendMessage.setText(messages.getRandomMessageTextDeleted(randomMessage.getUser().getUserName()));
                 trySend = 0;

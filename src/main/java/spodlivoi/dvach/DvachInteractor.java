@@ -19,6 +19,7 @@ public interface DvachInteractor {
     int getVideoStats();
 
     @Async
-    void convertAndSendVideoAsync(Message message, File sourceVideo, File targetVideo, String format) throws EncoderException, InterruptedException;
+    void convertAndSendVideoAsync(Message message, File sourceVideo, File targetVideo, String format)
+            throws EncoderException, InterruptedException;
 
 }

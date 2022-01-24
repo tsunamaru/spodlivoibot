@@ -55,13 +55,14 @@ public class LogImpl implements Log {
             PrintWriter pw = new PrintWriter(sw, true);
             error.printStackTrace(pw);
             String text;
-            if (message != null)
+            if (message != null) {
                 text = "При обработке запроса:\n```" + message.toString().replaceAll(",", ",\n")
                         + "```\nв подливе произошёл пиздец:\n`" + error + "`\nStackTrace:\n```"
                         + sw.getBuffer().toString() + "```";
-            else
+            } else {
                 text = "В подливе произошёл пиздец:\n`" + error + "`\nStackTrace:\n```"
                         + sw.getBuffer().toString() + "```";
+            }
             sendMessage.setText(text);
             sendMessage.enableMarkdownV2(true);
             sendMessage.setChatId(adminChatId);
@@ -77,6 +78,7 @@ public class LogImpl implements Log {
     public void error(Throwable error, BotApiObject message) {
         sendErrorMessage(error, message);
     }
+
     @Override
     public void error(Throwable error) {
         log.error("Error: ", error);

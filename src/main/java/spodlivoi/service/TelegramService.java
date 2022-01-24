@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import spodlivoi.utils.Log;
-import spodlivoi.utils.LogImpl;
 
 import javax.annotation.PostConstruct;
 
@@ -15,17 +14,15 @@ import javax.annotation.PostConstruct;
 @Service
 public class TelegramService extends TelegramLongPollingBot {
 
+    private final JmsTemplate jmsTemplate;
+    private final Log log;
     @Value("${telegram.bot.token}")
     private String botToken;
     @Value("${telegram.bot.username}")
     private String botUserName;
 
-    private final JmsTemplate jmsTemplate;
-
-    private final Log log;
-
     @PostConstruct
-    void selfInit(){
+    void selfInit() {
         log.setTelegramService(this);
     }
 
@@ -33,7 +30,7 @@ public class TelegramService extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         try {
             jmsTemplate.convertAndSend("podlivaQueue", update);
-        }catch (Exception e){
+        } catch (Exception e) {
             log.error(e, update);
         }
     }

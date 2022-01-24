@@ -1,12 +1,17 @@
 debug: false
 dvach:
-  url: https://2ch.hk/b/catalog.json
+  url: https://2ch.hk
 logging:
   file:
     name: spodlivoi.log
   logback:
     rollingpolicy:
       max-file-size: 50MB
+  level:
+    spodlivoi.dvach: INFO
+    ws.schild.jave: INFO
+    ws.schild: INFO
+    org.springframework.web.filter.CommonsRequestLoggingFilter: INFO
 spring:
   application:
     name: spodlivoi_bot
@@ -43,3 +48,8 @@ telegram:
     token: ''
     username: ''
     admin-chat-id: ''
+feign:
+  client:
+    config:
+      default:
+        loggerLevel: BASIC
