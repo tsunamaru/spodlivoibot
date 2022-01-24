@@ -14,7 +14,12 @@ import org.telegram.telegrambots.meta.api.methods.send.SendSticker;
 import org.telegram.telegrambots.meta.api.methods.stickers.GetStickerSet;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
-import org.telegram.telegrambots.meta.api.objects.*;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.Document;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
+import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.inlinequery.inputmessagecontent.InputTextMessageContent;
 import org.telegram.telegrambots.meta.api.objects.inlinequery.result.InlineQueryResult;
 import org.telegram.telegrambots.meta.api.objects.inlinequery.result.InlineQueryResultArticle;
@@ -25,13 +30,27 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKe
 import org.telegram.telegrambots.meta.api.objects.stickers.Sticker;
 import org.telegram.telegrambots.meta.api.objects.stickers.StickerSet;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import spodlivoi.database.entity.*;
+import spodlivoi.database.entity.Anus;
+import spodlivoi.database.entity.Chats;
+import spodlivoi.database.entity.Ddos;
+import spodlivoi.database.entity.Dicks;
+import spodlivoi.database.entity.UserMessage;
+import spodlivoi.database.entity.UserSettings;
+import spodlivoi.database.entity.Users;
+import spodlivoi.database.entity.Vagina;
 import spodlivoi.database.enums.Copypaste;
 import spodlivoi.database.enums.Gender;
-import spodlivoi.database.repository.*;
+import spodlivoi.database.repository.AnusRepository;
+import spodlivoi.database.repository.ChatRepository;
+import spodlivoi.database.repository.DdosRepository;
+import spodlivoi.database.repository.DickRepository;
+import spodlivoi.database.repository.UserMessageRepository;
+import spodlivoi.database.repository.UserRepository;
+import spodlivoi.database.repository.UserSettingsRepository;
+import spodlivoi.database.repository.VaginaRepository;
 import spodlivoi.dvach.DvachInteractor;
-import spodlivoi.roll.RollerInteractor;
 import spodlivoi.message.Messages;
+import spodlivoi.roll.RollerInteractor;
 import spodlivoi.utils.Randomizer;
 import spodlivoi.utils.StringUtil;
 import ws.schild.jave.EncoderException;
@@ -51,20 +70,9 @@ import java.util.Optional;
 @Slf4j
 public class BotService {
 
-    @Value("${telegram.bot.token}")
-    private String botToken;
-    @Value("${telegram.bot.username}")
-    private String botUserName;
-    @Value("${telegram.bot.maxinline}")
-    private int maxInlines;
-    @Value("${telegram.bot.admin-chat-id}")
-    private String adminChatId;
-    @Value("${debug}")
-    private boolean debug;
-
-    private final static String ERROR = "org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException: Error sending message: [429] Too Many Requests: retry after ";
-    private final static String ERROR_REGEX = "org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException: Error sending message: \\[429\\] Too Many Requests: retry after ";
-
+    private static final String ERROR =  "Too Many Requests: retry after ";
+    private static final String ERROR_REGEX = "org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException:" +
+            " Error sending message: \\[429\\] Too Many Requests: retry after ";
     private final TelegramService telegramService;
     private final UserMessageRepository userMessageRepository;
     private final ChatRepository chatRepository;
@@ -78,8 +86,17 @@ public class BotService {
     private final List<RollerInteractor> rollers;
     private final CopyPasteService copyPasteService;
     private final Messages messages;
-
     private final InlineQueryResultArticle repairArticle = new InlineQueryResultArticle();
+    @Value("${telegram.bot.token}")
+    private String botToken;
+    @Value("${telegram.bot.username}")
+    private String botUserName;
+    @Value("${telegram.bot.maxinline}")
+    private int maxInlines;
+    @Value("${telegram.bot.admin-chat-id}")
+    private String adminChatId;
+    @Value("${debug}")
+    private boolean debug;
 
     @PostConstruct
     public void initialization() {
@@ -87,22 +104,26 @@ public class BotService {
         repairArticle.setDescription("");
         repairArticle.setTitle("ЧИНИ!");
         var inputTextMessageContent = new InputTextMessageContent();
-        inputTextMessageContent.setMessageText("<b>" + "ЧИНИ ".repeat(700) +"</b>");
+        inputTextMessageContent.setMessageText("<b>" + "ЧИНИ ".repeat(700) + "</b>");
         inputTextMessageContent.setParseMode(ParseMode.HTML);
         repairArticle.setInputMessageContent(inputTextMessageContent);
     }
 
     @JmsListener(destination = "podlivaQueue", containerFactory = "myFactory")
-    public void acceptQueue(Update update) throws InterruptedException, TelegramApiException, EncoderException, IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+    public void acceptQueue(Update update)
+            throws InterruptedException, TelegramApiException, EncoderException, IOException, InvocationTargetException,
+            NoSuchMethodException, IllegalAccessException {
         acceptUpdate(update);
     }
 
-    public void acceptUpdate(Update update) throws InterruptedException, TelegramApiException, EncoderException, IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+    public void acceptUpdate(Update update)
+            throws InterruptedException, TelegramApiException, EncoderException, IOException, InvocationTargetException,
+            NoSuchMethodException, IllegalAccessException {
         try {
             if (update.hasMessage()) {
                 Message message = update.getMessage();
                 Optional<Ddos> ddos = ddosRepository.findByTelegramUserId(message.getFrom().getId().longValue());
-                if(ddos.isPresent() && ddos.get().getActive()){
+                if (ddos.isPresent() && ddos.get().getActive()) {
                     sendRandomCopypaste(ddos.get().getCopypaste(), message, true);
                 }
                 if (message.isCommand()) {
@@ -110,13 +131,15 @@ public class BotService {
                 } else if (message.isReply()) {
                     if (message.getReplyToMessage().getFrom() != null &&
                             message.getReplyToMessage().getFrom().getUserName() != null &&
-                            message.getReplyToMessage().getFrom().getUserName().equals(botUserName))
+                            message.getReplyToMessage().getFrom().getUserName().equals(botUserName)) {
                         sendFightSticker(message, true);
+                    }
                 } else if (message.hasText()) {
-                    if (message.getText().contains(botToken))
+                    if (message.getText().contains(botToken)) {
                         sendFightSticker(message, true);
+                    }
                     saveUserMessageAsync(message);
-                } else if(message.hasDocument()) {
+                } else if (message.hasDocument()) {
                     Document document = message.getDocument();
                     if (document.getMimeType().equalsIgnoreCase("video/webm")) {
                         GetFile getFile = GetFile.builder().fileId(document.getFileId()).build();
@@ -129,16 +152,16 @@ public class BotService {
                 }
             } else if (update.hasInlineQuery()) {
                 acceptInlineQuery(update);
-            } else if(update.hasCallbackQuery()){
+            } else if (update.hasCallbackQuery()) {
                 acceptCallbackQuery(update.getCallbackQuery());
             }
-        }catch (TelegramApiException telegramApiException){
+        } catch (TelegramApiException telegramApiException) {
             String errorString = telegramApiException.toString();
-            if(errorString.startsWith(ERROR)){
+            if (errorString.contains(ERROR)) {
                 int waitTime = Integer.parseInt(errorString.replaceFirst(ERROR_REGEX, ""));
                 Thread.sleep(waitTime);
                 acceptUpdate(update);
-            }else{
+            } else {
                 throw telegramApiException;
             }
         }
@@ -154,10 +177,12 @@ public class BotService {
             int sets = Randomizer.getRandomNumberInRange(1, (int) Math.ceil((double) setCount / (double) maxInlines));
             int start = maxInlines * (sets - 1);
             int end = maxInlines * sets;
-            if (setCount < end)
+            if (setCount < end) {
                 end = setCount;
-            if (end - start != maxInlines)
+            }
+            if (end - start != maxInlines) {
                 start = start + (end - start) - maxInlines;
+            }
             List<String> packs = messages.getFightPacks().subList(start, end);
             List<InlineQueryResult> results = new ArrayList<>();
             int i = 1;
@@ -174,7 +199,7 @@ public class BotService {
             answerInlineQuery.setResults(results);
         } else {
             List<InlineQueryResult> results = new ArrayList<>();
-            for(Copypaste copypaste : Copypaste.values()) {
+            for (Copypaste copypaste : Copypaste.values()) {
                 InlineQueryResultArticle article = new InlineQueryResultArticle();
                 article.setId(String.valueOf(copypaste.getNumber()));
                 article.setTitle(copypaste.getName());
@@ -192,7 +217,7 @@ public class BotService {
             answerInlineQuery.setResults(results);
         }
         answerInlineQuery.setInlineQueryId(update.getInlineQuery().getId());
-        telegramService.execute( answerInlineQuery);
+        telegramService.execute(answerInlineQuery);
     }
 
     private void sendMessage(Message message, String text, boolean markDown) throws TelegramApiException {
@@ -200,26 +225,31 @@ public class BotService {
         sendMessage.setChatId(String.valueOf(message.getChatId()));
         sendMessage.setReplyToMessageId(message.getMessageId());
         sendMessage.setText(new String(text.getBytes(), StandardCharsets.UTF_8));
-        if (markDown)
+        if (markDown) {
             sendMessage.enableMarkdown(true);
-       telegramService.execute( (sendMessage));
+        }
+        telegramService.execute((sendMessage));
     }
 
-    private void acceptCommand(Message message) throws TelegramApiException, IOException, EncoderException, InterruptedException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    private void acceptCommand(Message message)
+            throws TelegramApiException, IOException, EncoderException, InterruptedException, NoSuchMethodException,
+            InvocationTargetException, IllegalAccessException {
         String messageText = message.getText();
         String command;
         if (messageText.contains("@")) {
             command = messageText.split("@")[0];
-            if (!messageText.split("@")[1].equals(botUserName))
+            if (!messageText.split("@")[1].equals(botUserName)) {
                 return;
+            }
         } else {
             command = messageText;
         }
         if (messages.getCopypasteCommands().contains(command)) {
             sendRandomCopypaste(Copypaste.ofCommand(command), message, false);
         }
-        if (command.contains("/stats"))
+        if (command.contains("/stats")) {
             showStat(message);
+        }
 
         switch (command) {
             case "/roll":
@@ -230,8 +260,9 @@ public class BotService {
                 if (message.isReply()) {
                     sendFightSticker(message.getReplyToMessage(), true);
                     deleteMessage(message);
-                } else
+                } else {
                     sendFightSticker(message, false);
+                }
                 break;
             case "/test":
                 sendMessage(message, "Я работаю, а твой писюн - нет!", false);
@@ -243,7 +274,8 @@ public class BotService {
                 dvachInteractor.sendThreadAsync(message);
                 break;
             case "/webm":
-                sendMessage(message, "Это операция может занять продолжительное время из-за перекодирования видео...", false);
+                sendMessage(message, "Это операция может занять продолжительное время из-за перекодирования видео...",
+                        false);
                 dvachInteractor.sendVideoAsync(message);
                 break;
             case "/videostats":
@@ -259,20 +291,22 @@ public class BotService {
     }
 
     private void showStat(Message message) throws TelegramApiException {
-        String username = message.getText().replaceFirst( "/stats ", "");
-        if(username.isEmpty())
+        String username = message.getText().replaceFirst("/stats ", "");
+        if (username.isEmpty()) {
             return;
+        }
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(String.valueOf(message.getChatId()));
         Chats chat = chatRepository.getByChatId(message.getChatId());
-        if (chat == null)
+        if (chat == null) {
             chat = registerChat(message);
+        }
         Optional<Users> userOpional = userRepository.getByChatIdAndUserName(chat.getId(), username);
-        if(userOpional.isEmpty())
-            sendMessage(message, "Пользователь *" + username +"* не найден!", true);
-        else {
+        if (userOpional.isEmpty()) {
+            sendMessage(message, "Пользователь *" + username + "* не найден!", true);
+        } else {
             Users user = userOpional.get();
-            if(user.getSettings() == null){
+            if (user.getSettings() == null) {
                 UserSettings settings = new UserSettings();
                 settings.setUser(user);
                 settings.setRollAnus(true);
@@ -289,13 +323,13 @@ public class BotService {
         sendMessage.setChatId(String.valueOf(message.getChatId()));
         Users user = getUserByMessage(message);
         UserSettings settings;
-        if(user.getSettings() == null){
+        if (user.getSettings() == null) {
             settings = new UserSettings();
             settings.setUser(user);
             settings.setRollAnus(true);
             settings.setRollDick(true);
             settings = userSettingsRepository.save(settings);
-        }else{
+        } else {
             settings = user.getSettings();
         }
         settings.setChangeSetting(true);
@@ -303,14 +337,14 @@ public class BotService {
         sendMessage.setReplyMarkup(getSettingsReplyKeyboard(settings));
         sendMessage.setText(messages.getSettingName(message.getFrom().getUserName(), settings));
         sendMessage.enableMarkdown(true);
-       telegramService.execute( sendMessage);
+        telegramService.execute(sendMessage);
     }
 
-    private ReplyKeyboard getSettingsReplyKeyboard(UserSettings settings){
+    private ReplyKeyboard getSettingsReplyKeyboard(UserSettings settings) {
         Long id = settings.getId();
         InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
-        if(settings.getGender() != Gender.FEMALE) {
+        if (settings.getGender() != Gender.FEMALE) {
             List<InlineKeyboardButton> rowInline = new ArrayList<>();
             rowInline.add(InlineKeyboardButton.builder()
                     .text(messages.getDickRollSetting(settings.isRollDick()))
@@ -332,7 +366,7 @@ public class BotService {
                 .text(messages.getSewAnus())
                 .callbackData(messages.getSettingsButtonPrefix() + "12" + "_" + id).build());
         rowsInline.add(rowInline3);
-        if(settings.getGender() == Gender.FEMALE || settings.getGender() == Gender.FIGHT_HELICOPTER) {
+        if (settings.getGender() == Gender.FEMALE || settings.getGender() == Gender.FIGHT_HELICOPTER) {
             List<InlineKeyboardButton> rowInline = new ArrayList<>();
             rowInline.add(InlineKeyboardButton.builder()
                     .text(messages.getVaginaRollSetting(settings.isRollVagina()))
@@ -344,7 +378,7 @@ public class BotService {
                     .callbackData(messages.getSettingsButtonPrefix() + "13" + "_" + id).build());
             rowsInline.add(rowInline1);
         }
-        if(settings.isAccessGenderChange() || debug) {
+        if (settings.isAccessGenderChange() || debug) {
             List<InlineKeyboardButton> rowInline = new ArrayList<>();
             rowInline.add(InlineKeyboardButton.builder()
                     .text(messages.getChangeGender())
@@ -361,15 +395,16 @@ public class BotService {
     }
 
     private void acceptAdminCommand(String command, Message message) throws TelegramApiException {
-        if(!message.getChatId().toString().equals(adminChatId))
+        if (!message.getChatId().toString().equals(adminChatId)) {
             return;
-        if(command.contains(messages.getDdosActivatedCommand())){
+        }
+        if (command.contains(messages.getDdosActivatedCommand())) {
             Long telegramId = Long.valueOf(command.replaceFirst(messages.getDdosActivatedCommand() + " ", ""));
             Optional<Ddos> ddosOptional = ddosRepository.findByTelegramUserId(telegramId);
             Long id;
-            if(ddosOptional.isPresent()){
+            if (ddosOptional.isPresent()) {
                 id = ddosOptional.get().getId();
-            } else{
+            } else {
                 Ddos ddos = new Ddos();
                 ddos.setActive(false);
                 ddos.setTelegramUserId(telegramId);
@@ -380,11 +415,11 @@ public class BotService {
             sendMessage.setText(messages.getDdosSelectCopypastes());
             InlineKeyboardMarkup markupInline = new InlineKeyboardMarkup();
             List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
-            for(Copypaste copypaste : Copypaste.values()) {
+            for (Copypaste copypaste : Copypaste.values()) {
                 List<InlineKeyboardButton> rowInline = new ArrayList<>();
                 rowInline.add(InlineKeyboardButton.builder()
                         .text(copypaste.getName())
-                        .callbackData(messages.getDdosButtonPrefix() + copypaste.ordinal()+ "_" + id).build());
+                        .callbackData(messages.getDdosButtonPrefix() + copypaste.ordinal() + "_" + id).build());
                 rowsInline.add(rowInline);
             }
             List<InlineKeyboardButton> rowInline = new ArrayList<>();
@@ -394,39 +429,39 @@ public class BotService {
             rowsInline.add(rowInline);
             markupInline.setKeyboard(rowsInline);
             sendMessage.setReplyMarkup(markupInline);
-           telegramService.execute( sendMessage);
-        } else if(command.contains(messages.getDdosdeactivatedCommand())){
+            telegramService.execute(sendMessage);
+        } else if (command.contains(messages.getDdosdeactivatedCommand())) {
             String telegramId = command.replaceFirst(messages.getDdosdeactivatedCommand() + " ", "");
             Optional<Ddos> ddosOptional = ddosRepository.findByTelegramUserId(Long.valueOf(telegramId));
-            if(ddosOptional.isPresent()){
+            if (ddosOptional.isPresent()) {
                 Ddos ddos = ddosOptional.get();
-                if(ddos.getActive()){
+                if (ddos.getActive()) {
                     ddos.setActive(false);
                     ddosRepository.save(ddos);
                     SendMessage sendMessage = new SendMessage();
                     sendMessage.setChatId(adminChatId);
                     sendMessage.setText(messages.getDdosdeactivatedMessage(getUserNameById(ddos.getTelegramUserId())));
-                   telegramService.execute( sendMessage);
+                    telegramService.execute(sendMessage);
                     return;
                 }
             }
             SendMessage sendMessage = new SendMessage();
             sendMessage.setChatId(adminChatId);
             sendMessage.setText(messages.getDdosAlreadyDiactiveMessage());
-           telegramService.execute( sendMessage);
+            telegramService.execute(sendMessage);
         }
     }
 
     private String getUserNameById(Long telegramId) {
         List<Users> users = userRepository.getByUserId(telegramId);
         String name = "";
-        if (users.isEmpty())
+        if (users.isEmpty()) {
             name = "(" + telegramId + ")";
-        else {
+        } else {
             Users user = users.get(0);
-            if (!StringUtil.isNullOrWhiteSpace(user.getUserName()))
+            if (!StringUtil.isNullOrWhiteSpace(user.getUserName())) {
                 name += user.getUserName();
-            else {
+            } else {
                 name += !StringUtil.isNullOrWhiteSpace(user.getFirstName()) ? user.getFirstName() + " " : "";
                 name += !StringUtil.isNullOrWhiteSpace(user.getLastName()) ? user.getLastName() : "";
             }
@@ -436,9 +471,9 @@ public class BotService {
     }
 
     private void acceptCallbackQuery(CallbackQuery callbackQuery) throws TelegramApiException {
-        if (callbackQuery.getData().startsWith(messages.getDdosButtonPrefix())){
+        if (callbackQuery.getData().startsWith(messages.getDdosButtonPrefix())) {
             setDdos(callbackQuery.getData(), callbackQuery.getMessage().getMessageId());
-        } else if (callbackQuery.getData().startsWith(messages.getSettingsButtonPrefix())){
+        } else if (callbackQuery.getData().startsWith(messages.getSettingsButtonPrefix())) {
             setSettings(callbackQuery.getData(), callbackQuery);
         }
     }
@@ -448,104 +483,112 @@ public class BotService {
         String[] ids = data.replaceAll(messages.getSettingsButtonPrefix(), "").split("_");
         int actionId = Integer.parseInt(ids[0]);
         Long id = Long.valueOf(ids[1]);
-        UserSettings userSettings = userSettingsRepository.getById(id);
-        Users user = userSettings.getUser();
-        if (userSettings.getUser().getUserId() != callbackQuery.getFrom().getId())
-            return;
+        var userSettingsOptional = userSettingsRepository.findById(id);
+        if (userSettingsOptional.isPresent()) {
+            var userSettings = userSettingsOptional.get();
+            var user = userSettings.getUser();
+            if (userSettings.getUser().getUserId() != callbackQuery.getFrom().getId()) {
+                return;
+            }
 
-        switch (actionId) {
-            case -1:
-               telegramService.execute( DeleteMessage.builder()
-                        .chatId(message.getChatId().toString()).messageId(message.getMessageId()).build());
-                userSettings.setChangeSetting(false);
-                userSettingsRepository.save(userSettings);
-                return;
-            case 1:
-                userSettings.setRollDick(!userSettings.isRollDick());
-                break;
-            case 2:
-                userSettings.setRollAnus(!userSettings.isRollAnus());
-                break;
-            case 3:
-                userSettings.setRollVagina(!userSettings.isRollVagina());
-                break;
-            case 4:
-                Gender gender = Gender.getRandomGender();
-                userSettings.setGender(gender);
-                userSettings.setAccessGenderChange(false);
-                if(gender == Gender.MALE)
-                    userSettings.setRollVagina(false);
-                if(gender == Gender.FEMALE)
-                    userSettings.setRollDick(false);
-                break;
-            case 11:
-                Dicks dick = user.getDick();
-                if(dick == null){
-                    dick = new Dicks();
-                    dick.setUser(userSettings.getUser());
-                }
-                dick.setSize(0);
-                dickRepository.save(dick);
-                break;
-            case 12:
-                Anus anus = user.getAnus();
-                if(anus == null){
-                    anus = new Anus();
-                    anus.setUser(userSettings.getUser());
-                }
-                anus.setSize(0);
-                anusRepository.save(anus);
-                break;
-            case 13:
-                Vagina vagina = user.getVagina();
-                if(vagina == null){
-                    vagina = new Vagina();
-                    vagina.setUser(userSettings.getUser());
-                }
-                vagina.setSize(0);
-                vaginaRepository.save(vagina);
-                break;
-            default:
-                return;
+            switch (actionId) {
+                case -1:
+                    telegramService.execute(DeleteMessage.builder()
+                            .chatId(message.getChatId().toString()).messageId(message.getMessageId()).build());
+                    userSettings.setChangeSetting(false);
+                    userSettingsRepository.save(userSettings);
+                    return;
+                case 1:
+                    userSettings.setRollDick(!userSettings.isRollDick());
+                    break;
+                case 2:
+                    userSettings.setRollAnus(!userSettings.isRollAnus());
+                    break;
+                case 3:
+                    userSettings.setRollVagina(!userSettings.isRollVagina());
+                    break;
+                case 4:
+                    Gender gender = Gender.getRandomGender();
+                    userSettings.setGender(gender);
+                    userSettings.setAccessGenderChange(false);
+                    if (gender == Gender.MALE) {
+                        userSettings.setRollVagina(false);
+                    }
+                    if (gender == Gender.FEMALE) {
+                        userSettings.setRollDick(false);
+                    }
+                    break;
+                case 11:
+                    Dicks dick = user.getDick();
+                    if (dick == null) {
+                        dick = new Dicks();
+                        dick.setUser(userSettings.getUser());
+                    }
+                    dick.setSize(0);
+                    dickRepository.save(dick);
+                    break;
+                case 12:
+                    Anus anus = user.getAnus();
+                    if (anus == null) {
+                        anus = new Anus();
+                        anus.setUser(userSettings.getUser());
+                    }
+                    anus.setSize(0);
+                    anusRepository.save(anus);
+                    break;
+                case 13:
+                    Vagina vagina = user.getVagina();
+                    if (vagina == null) {
+                        vagina = new Vagina();
+                        vagina.setUser(userSettings.getUser());
+                    }
+                    vagina.setSize(0);
+                    vaginaRepository.save(vagina);
+                    break;
+                default:
+                    return;
+            }
+
+            userSettings = userSettingsRepository.save(userSettings);
+
+            telegramService.execute(
+                    EditMessageText.builder().chatId(message.getChatId().toString()).messageId(message.getMessageId())
+                            .replyMarkup((InlineKeyboardMarkup) getSettingsReplyKeyboard(userSettings)).text(
+                                    messages.getSettingName(userSettings.getUser().getUserName(), userSettings))
+                            .parseMode(ParseMode.MARKDOWN).build());
         }
-
-        userSettings = userSettingsRepository.save(userSettings);
-
-       telegramService.execute( EditMessageText.builder().chatId(message.getChatId().toString()).messageId(message.getMessageId())
-                .replyMarkup((InlineKeyboardMarkup) getSettingsReplyKeyboard(userSettings)).text(
-                        messages.getSettingName(userSettings.getUser().getUserName(), userSettings)).parseMode(ParseMode.MARKDOWN).build());
     }
 
     private void setDdos(String data, Integer messageId) throws TelegramApiException {
         String[] ids = data.replaceAll(messages.getDdosButtonPrefix(), "").split("_");
         int actionId = Integer.parseInt(ids[0]);
         Long id = Long.valueOf(ids[1]);
-        if(actionId == -1){
-           telegramService.execute( DeleteMessage.builder()
+        if (actionId == -1) {
+            telegramService.execute(DeleteMessage.builder()
                     .chatId(adminChatId).messageId(messageId).build());
-           return;
+            return;
         }
         Ddos ddos = ddosRepository.getById(id);
         ddos.setCopypaste(Copypaste.values()[actionId]);
         ddos.setActive(true);
         ddosRepository.save(ddos);
-       telegramService.execute( EditMessageText.builder().chatId(adminChatId).messageId(messageId).replyMarkup(null).text(
-                messages.getDdosActivatedMessage(getUserNameById(ddos.getTelegramUserId()))).build());
+        telegramService.execute(
+                EditMessageText.builder().chatId(adminChatId).messageId(messageId).replyMarkup(null).text(
+                        messages.getDdosActivatedMessage(getUserNameById(ddos.getTelegramUserId()))).build());
     }
 
     private void deleteMessage(Message message) throws TelegramApiException {
         DeleteMessage deleteMessage = new DeleteMessage();
         deleteMessage.setChatId(String.valueOf(message.getChatId()));
         deleteMessage.setMessageId(message.getMessageId());
-       telegramService.execute( deleteMessage);
+        telegramService.execute(deleteMessage);
     }
-
 
 
     private void sendRandomCopypaste(Copypaste type, Message message, boolean reply) throws TelegramApiException {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(String.valueOf(message.getChatId()));
-        if(reply){
+        if (reply) {
             sendMessage.setReplyToMessageId(message.getMessageId());
         } else if (message.isReply()) {
             sendMessage.setReplyToMessageId(message.getReplyToMessage().getMessageId());
@@ -553,14 +596,14 @@ public class BotService {
         }
         sendMessage.setParseMode(ParseMode.MARKDOWN);
         sendMessage.setText(copyPasteService.getRandomCopyPaste(type));
-       telegramService.execute( sendMessage);
+        telegramService.execute(sendMessage);
     }
 
     private StickerSet getFightStickers() throws TelegramApiException {
         return telegramService.execute(new GetStickerSet(Randomizer.getRandomValueFromList(messages.getFightPacks())));
     }
 
-    private  StickerSet getStickerSet(String name) throws TelegramApiException {
+    private StickerSet getStickerSet(String name) throws TelegramApiException {
         return telegramService.execute(new GetStickerSet(name));
     }
 
@@ -568,11 +611,11 @@ public class BotService {
         return getSticker(getFightStickers());
     }
 
-    private Sticker getSticker(StickerSet stickerSet){
-        if(stickerSet == null) {
+    private Sticker getSticker(StickerSet stickerSet) {
+        if (stickerSet == null) {
             return null;
         }
-        return  Randomizer.getRandomValueFromList(stickerSet.getStickers());
+        return Randomizer.getRandomValueFromList(stickerSet.getStickers());
     }
 
     private void sendFightSticker(Message message, boolean reply) throws TelegramApiException {
@@ -580,16 +623,18 @@ public class BotService {
     }
 
     private void sendSticker(Message message, Sticker sticker, boolean reply) throws TelegramApiException {
-        if (sticker == null)
+        if (sticker == null) {
             return;
+        }
         SendSticker sendSticker = new SendSticker();
         sendSticker.setChatId(String.valueOf(message.getChatId()));
-        if (reply)
+        if (reply) {
             sendSticker.setReplyToMessageId(message.getMessageId());
+        }
         InputFile inputFile = new InputFile();
         inputFile.setMedia(sticker.getFileId());
         sendSticker.setSticker(inputFile);
-       telegramService.execute( sendSticker);
+        telegramService.execute(sendSticker);
     }
 
     public Chats registerChat(Message message) {
@@ -602,8 +647,9 @@ public class BotService {
     }
 
     private Users registerUser(Message message, Chats chat, Users currentUser) {
-        if (chat == null)
+        if (chat == null) {
             chat = chatRepository.getByChatId(message.getChatId());
+        }
         User telegramUser = message.getFrom();
         Users user;
         user = Objects.requireNonNullElseGet(currentUser, Users::new);
@@ -612,24 +658,26 @@ public class BotService {
         user.setUserName(telegramUser.getUserName());
         user.setFirstName(telegramUser.getFirstName());
         user.setLastName(telegramUser.getLastName());
-        if(user.getUserName() == null){
+        if (user.getUserName() == null) {
             user.setUserName(telegramUser.getFirstName());
         }
-        if(user.getUserName() == null){
+        if (user.getUserName() == null) {
             user.setUserName(Randomizer.getRandomValueFromList(messages.getRandomUserNames()));
         }
         return userRepository.save(user);
     }
 
 
-    public Users getUserByMessage(Message message){
+    public Users getUserByMessage(Message message) {
         Chats chat = chatRepository.getByChatId(message.getChatId());
-        if (chat == null)
+        if (chat == null) {
             chat = registerChat(message);
+        }
         Users user = userRepository.getByChatIdAndUserId(chat.getId(), message.getFrom().getId());
-        if (user == null)
+        if (user == null) {
             user = registerUser(message, chat, null);
-        if(user.getUpdatedAt() == null || user.getUpdatedAt().isAfter(user.getUpdatedAt().plusDays(1))){
+        }
+        if (user.getUpdatedAt() == null || user.getUpdatedAt().isAfter(user.getUpdatedAt().plusDays(1))) {
             registerUser(message, chat, user);
         }
         return user;
@@ -637,22 +685,24 @@ public class BotService {
 
 
     private void roll(Message message) throws TelegramApiException {
-        for(RollerInteractor roller : rollers)
+        for (RollerInteractor roller : rollers) {
             roller.roll(message, getUserByMessage(message));
+        }
     }
 
     private void getTop(Message message) throws TelegramApiException {
         Chats chat = chatRepository.getByChatId(message.getChatId());
-        if(chat == null)
+        if (chat == null) {
             sendMessage(message, "Никто ещё ничего не роллил", false);
-        for(RollerInteractor roller : rollers) {
+        }
+        for (RollerInteractor roller : rollers) {
             log.debug("Get top from roller {}", roller);
             sendMessage(message, roller.getTop(userRepository.getAllByChat(chat)), false);
         }
     }
 
     @Async
-    void saveUserMessageAsync(Message message){
+    void saveUserMessageAsync(Message message) {
         var user = getUserByMessage(message);
         var userMessage = new UserMessage();
         userMessage.setUser(user);

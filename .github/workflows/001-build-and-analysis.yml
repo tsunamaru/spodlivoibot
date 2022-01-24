@@ -41,6 +41,9 @@ jobs:
       
       - name: Install Gradle 7.3.3
         run: wget https://downloads.gradle-dn.com/distributions/gradle-7.3.3-bin.zip && unzip gradle-7.3.3-bin.zip
+
+      - name: Run checkstyle
+        run: ./gradle-7.3.3/bin/gradle checkstyleMain
       
       - name: Run Gradle
         run: ./gradle-7.3.3/bin/gradle build --no-daemon

@@ -54,24 +54,31 @@ public class CopyPasteServiceImpl implements CopyPasteService {
         shizik = insultsJson.getJSONArray("shizik");
     }
 
-    public String getRandomCopyPaste(Copypaste type){
+    public String getRandomCopyPaste(Copypaste type) {
         JSONArray jsonArray = getJSONCopyPaste(type);
-        if(jsonArray != null) {
+        if (jsonArray != null) {
             int rand = Randomizer.getRandomNumberInRange(0, jsonArray.length() - 1);
             return jsonArray.getString(rand);
-        }else
+        } else {
             return "Копипасту спиздили армяне!";
+        }
     }
 
     @Override
-    public JSONArray getJSONCopyPaste(Copypaste copypaste){
-        switch (copypaste){
-            case BABY: return baby;
-            case DOTA: return dota;
-            case OLDS: return olds;
-            case SHIZIK: return shizik;
-            case KOLCHAN: return kolchan;
-            default: return null;
+    public JSONArray getJSONCopyPaste(Copypaste copypaste) {
+        switch (copypaste) {
+            case BABY:
+                return baby;
+            case DOTA:
+                return dota;
+            case OLDS:
+                return olds;
+            case SHIZIK:
+                return shizik;
+            case KOLCHAN:
+                return kolchan;
+            default:
+                return null;
         }
     }
 

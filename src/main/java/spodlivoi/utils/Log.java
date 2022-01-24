@@ -1,12 +1,7 @@
 package spodlivoi.utils;
 
 import org.telegram.telegrambots.meta.api.interfaces.BotApiObject;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import spodlivoi.service.TelegramService;
-
-import java.io.PrintWriter;
-import java.io.StringWriter;
 
 public interface Log {
     void debug(String text);

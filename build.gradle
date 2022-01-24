@@ -2,6 +2,19 @@ plugins {
     id 'org.springframework.boot' version '2.6.2'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'java'
+    id 'checkstyle'
+}
+checkstyle {
+    toolVersion '9.0.1'
+    configFile file("config/checkstyle/checkstyle.xml")
+}
+
+checkstyleMain {
+    source ='src/main/java'
+}
+
+checkstyleTest {
+    source ='src/test/java'
 }
 
 dependencyManagement {
@@ -42,12 +55,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-log4j2'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-activemq'
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 
     implementation group: 'com.github.xabgesagtx', name: 'telegram-spring-boot-starter', version: '0.26'
 
     implementation group: 'ws.schild', name: 'jave-core', version: '3.2.0'
     implementation group: 'ws.schild', name: 'jave-nativebin-linux64', version: '3.2.0'
-   // implementation group: 'ws.schild', name: 'jave-nativebin-win64', version: '3.0.1'
 
     implementation 'io.github.furstenheim:copy_down:1.0'
 

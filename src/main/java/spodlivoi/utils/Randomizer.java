@@ -7,8 +7,8 @@ public class Randomizer {
 
     private static final SecureRandom random = new SecureRandom();
 
-    public static <T> T getRandomValueFromList(List<T> list){
-        return  list.get(random.nextInt(list.size()));
+    public static <T> T getRandomValueFromList(List<T> list) {
+        return list.get(random.nextInt(list.size()));
     }
 
     public static int getRandomNumberInRange(int min, int max) {

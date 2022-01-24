@@ -14,12 +14,13 @@ public interface RollerInteractor {
 
     String getTop(List<Users> users);
 
-    default void sendMessage(Message message, String text, TelegramService telegramService) throws TelegramApiException {
+    default void sendMessage(Message message, String text, TelegramService telegramService)
+            throws TelegramApiException {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(String.valueOf(message.getChatId()));
         sendMessage.setReplyToMessageId(message.getMessageId());
         sendMessage.setText(text);
         sendMessage.enableMarkdown(true);
-       telegramService.execute( sendMessage);
+        telegramService.execute(sendMessage);
     }
 }
