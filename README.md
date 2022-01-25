@@ -46,7 +46,9 @@ Better go see it with your own eyes.
 Create new bot with [@BotFather](https://t.me/BotFather) and fill your values in `docker-compose.yml`.  
 You should replace `TELEGRAM_BOT_TOKEN` and `TELEGRAM_BOT_USERNAME` at least before starting.  
 If you want to trigger admin commands and get error reporting, set chat ID in `TELEGRAM_BOT_ADMIN-CHAT-ID`.  
-Start is simple as `docker-compose --compatibility up --build -d`  
+Start is simple as `docker-compose up -d`  
+If you want to build docker image on your own, add `--build` flag to your docker-compose command.  
+And if you want to use limits, use `--compatibility`.  
 
 Demo: [@spodlivoi_bot](https://t.me/spodlivoi_bot)  
 
