@@ -92,7 +92,7 @@ public class TelegramService extends TelegramLongPollingBot {
                 try {
                     scheduler.scheduleJob(job, trigger);
                 } catch (SchedulerException e) {
-                    e.printStackTrace();
+                    log.error("Ошибка создания события удаления", e);
                 }
             }
         }

@@ -18,6 +18,8 @@ public interface Log {
 
     void error(Throwable error);
 
+    void error(String message, Throwable error);
+
     void setTelegramService(TelegramService bot);
 
 }

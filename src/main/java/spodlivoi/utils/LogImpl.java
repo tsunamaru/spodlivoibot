@@ -86,6 +86,12 @@ public class LogImpl implements Log {
     }
 
     @Override
+    public void error(String message, Throwable error) {
+        log.error(message, error);
+        sendErrorMessage(error, message);
+    }
+
+    @Override
     public void setTelegramService(TelegramService bot) {
         this.bot = bot;
     }
