@@ -61,7 +61,7 @@ public class AnusRoller extends RollerBase<Anus> {
                 String item = messages.getRandomAnusItem();
                 switch (messageNumber) {
                     case 0:
-                        return "Твой *♂Dungeon Master♂* вставил *♂finger in your anal♂* от чего он стал глубже на " +
+                        return "Твой *♂Dungeon Master♂* вставил *♂finger in your ass♂* от чего очко стало глубже на " +
                                 "целых " + Math.abs(upSize) + "см. \n" +
                                 "Теперь он " + size + "см. Скоро ты станешь настоящим *♂fucking slave♂*!";
                     case 1:
