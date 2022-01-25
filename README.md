@@ -10,7 +10,7 @@
 [![actions-workflow-test][actions-workflow-test-badge]][actions-workflow-test]
 [![license][license-badge]][license]
 
-#### Bot commands (stanalone)
+#### Standalone commands
 - `/roll` - rolls your dick (and/or vagina) and anus size (configurable by `/setting`)
 - `/fight` - random humilation pic
 - `/webm` - random .webm posted on 2ch.hk/b
@@ -20,7 +20,7 @@
 - `/top` - yeeeeeeeees
 - `/test` - healthcheck (hidden)
 - `/videostats` - how many videos processing right now (hidden)
-#### Bot commands (inline)
+#### Inline commands
 - All copypaste set + a special one
 - `fight` or `боевая` - give you 10 random humilation pics
 #### Passive bot features
@@ -57,4 +57,4 @@ Demo: [@spodlivoi_bot](https://t.me/spodlivoi_bot)
 [actions-workflow-test]: https://github.com/tsunamaru/spodlivoibot/actions?query=workflow%3ADeployment
 [actions-workflow-test-badge]: https://img.shields.io/github/workflow/status/tsunamaru/spodlivoibot/Deployment?label=CI&style=for-the-badge&logo=github
 [license]: LICENSE
-[license-badge]: https://img.shields.io/github/license/tsunamaru/spodlivoibot?style=for-the-badge
+[license-badge]: https://img.shields.io/github/license/tsunamaru/spodlivoibot?style=for-the-badge&logo=apache
