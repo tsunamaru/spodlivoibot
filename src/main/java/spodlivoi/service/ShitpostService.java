@@ -9,6 +9,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import spodlivoi.database.entity.Chats;
 import spodlivoi.database.entity.UserMessage;
 import spodlivoi.database.repository.ChatRepository;
+import spodlivoi.database.repository.ChatSettingRepository;
 import spodlivoi.database.repository.UserMessageRepository;
 import spodlivoi.message.Messages;
 import spodlivoi.utils.Randomizer;
@@ -23,6 +24,7 @@ public class ShitpostService {
 
     private final UserMessageRepository userMessageRepository;
     private final ChatRepository chatRepository;
+    private final ChatSettingRepository chatSettingRepository;
     private final Messages messages;
 
     private final TelegramService telegramService;
@@ -32,7 +34,8 @@ public class ShitpostService {
     @Scheduled(cron = "0 0 0 */1 * *")
     public void sendShitPostOfTheDay() {
         try {
-            for (Chats chat : chatRepository.findAll()) {
+            var chatIds = chatSettingRepository.getChatIdsByShitPostTrue();
+            for (Chats chat : chatRepository.findByChatIdIn(chatIds)) {
                 try {
                     List<UserMessage> messageList = userMessageRepository.findAllByChat(chat);
                     if (messageList.isEmpty()) {

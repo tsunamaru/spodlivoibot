@@ -31,6 +31,7 @@ import org.telegram.telegrambots.meta.api.objects.stickers.Sticker;
 import org.telegram.telegrambots.meta.api.objects.stickers.StickerSet;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import spodlivoi.database.entity.Anus;
+import spodlivoi.database.entity.ChatSetting;
 import spodlivoi.database.entity.Chats;
 import spodlivoi.database.entity.Ddos;
 import spodlivoi.database.entity.Dicks;
@@ -42,6 +43,7 @@ import spodlivoi.database.enums.Copypaste;
 import spodlivoi.database.enums.Gender;
 import spodlivoi.database.repository.AnusRepository;
 import spodlivoi.database.repository.ChatRepository;
+import spodlivoi.database.repository.ChatSettingRepository;
 import spodlivoi.database.repository.DdosRepository;
 import spodlivoi.database.repository.DickRepository;
 import spodlivoi.database.repository.UserMessageRepository;
@@ -60,17 +62,19 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class BotService {
 
-    private static final String ERROR =  "Too Many Requests: retry after ";
+    private static final String ERROR = "Too Many Requests: retry after ";
     private static final String ERROR_REGEX = "org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException:" +
             " Error sending message: \\[429\\] Too Many Requests: retry after ";
     private final TelegramService telegramService;
@@ -85,6 +89,7 @@ public class BotService {
     private final UserSettingsRepository userSettingsRepository;
     private final List<RollerInteractor> rollers;
     private final CopyPasteService copyPasteService;
+    private final ChatSettingRepository chatSettingRepository;
     private final Messages messages;
     private final InlineQueryResultArticle repairArticle = new InlineQueryResultArticle();
     @Value("${telegram.bot.token}")
@@ -122,6 +127,7 @@ public class BotService {
         try {
             if (update.hasMessage()) {
                 Message message = update.getMessage();
+                log.debug("Accept {}", message);
                 Optional<Ddos> ddos = ddosRepository.findByTelegramUserId(message.getFrom().getId().longValue());
                 if (ddos.isPresent() && ddos.get().getActive()) {
                     sendRandomCopypaste(ddos.get().getCopypaste(), message, true);
@@ -135,7 +141,7 @@ public class BotService {
                         sendFightSticker(message, true);
                     }
                 } else if (message.hasText()) {
-                    if (message.getText().contains(botToken)) {
+                    if (message.getText().contains(botUserName)) {
                         sendFightSticker(message, true);
                     }
                     saveUserMessageAsync(message);
@@ -232,8 +238,7 @@ public class BotService {
     }
 
     private void acceptCommand(Message message)
-            throws TelegramApiException, IOException, EncoderException, InterruptedException, NoSuchMethodException,
-            InvocationTargetException, IllegalAccessException {
+            throws TelegramApiException, IOException, EncoderException, InterruptedException {
         String messageText = message.getText();
         String command;
         if (messageText.contains("@")) {
@@ -244,16 +249,17 @@ public class BotService {
         } else {
             command = messageText;
         }
+        var acceptedCommand = true;
         if (messages.getCopypasteCommands().contains(command)) {
             sendRandomCopypaste(Copypaste.ofCommand(command), message, false);
-        }
-        if (command.contains("/stats")) {
+        } else if (command.contains("/stats")) {
             showStat(message);
+        } else if (command.contains("/setMessageDeleteTimer")) {
+            var date = message.getText().replace("/setMessageDeleteTimer ", "");
+            setDeleteTime(message, date);
         }
-
         switch (command) {
             case "/roll":
-                //   log.debug("Start roll time: {}", System.currentTimeMillis());
                 roll(message);
                 break;
             case "/fight":
@@ -282,12 +288,110 @@ public class BotService {
                 sendMessage(message, "Количество видео в обработке: " + dvachInteractor.getVideoStats(), false);
                 break;
             case "/setting":
+                acceptedCommand = false;
                 showSetting(message);
                 break;
+            case "/enable_shitpost":
+                changeShitpost(message, true);
+                break;
+            case "/disable_shitpost":
+                changeShitpost(message, false);
+                break;
             default:
+                acceptedCommand = false;
                 acceptAdminCommand(command, message);
                 break;
         }
+        if (acceptedCommand) {
+            telegramService.setDeleteTimer(message);
+        }
+    }
+
+    private void changeShitpost(Message message, boolean enabled) throws TelegramApiException {
+        var settingOptional = chatSettingRepository.findByChatId(message.getChatId());
+        var setting = settingOptional.orElse(new ChatSetting());
+        setting.setChatId(message.getChatId());
+        setting.setShitPost(enabled);
+        chatSettingRepository.save(setting);
+        var status = enabled ? "включён" : "отключён";
+        sendMessage(message, "Высер дня успешно " + status, false);
+    }
+
+    private void setDeleteTime(Message message, String date) throws TelegramApiException {
+        final String errorMessage = "Что за хуйню ты написал? Нужный формат: 0d 0h 0m 0s";
+        long deletePeriod = 0;
+        try {
+            var units = date.split(" ");
+            if (units.length == 0) {
+                sendMessage(message, errorMessage, false);
+                return;
+            }
+            var finded = false;
+            var pattern = Pattern.compile("(\\d+)[a-z]");
+            for (var unit : units) {
+                var matcher = pattern.matcher(unit);
+                if (matcher.find()) {
+                    finded = true;
+                    if (unit.contains("d")) {
+                        var days = Integer.parseInt(matcher.group(1));
+                        deletePeriod += ((long) days * 24 * 60 * 60 * 1000);
+                    } else if (unit.contains("h")) {
+                        var hours = Integer.parseInt(matcher.group(1));
+                        deletePeriod += ((long) hours * 60 * 60 * 1000);
+                    } else if (unit.contains("m")) {
+                        var min = Integer.parseInt(matcher.group(1));
+                        deletePeriod += ((long) min * 60 * 1000);
+                    } else if (unit.contains("s")) {
+                        var sec = Integer.parseInt(matcher.group(1));
+                        deletePeriod += ((long) sec * 1000);
+                    } else {
+                        finded = false;
+                    }
+                }
+            }
+            if (!finded) {
+                sendMessage(message, errorMessage, false);
+                return;
+            }
+        } catch (Exception e) {
+            sendMessage(message, errorMessage, false);
+            log.error("Ошибка парсинга периода ", e);
+            return;
+        }
+        setDeleteTimerSetting(message, deletePeriod);
+    }
+
+    private void setDeleteTimerSetting(Message message, long deletePeriod) throws TelegramApiException {
+        var settingOptional = chatSettingRepository.findByChatId(message.getChatId());
+        var setting = settingOptional.orElse(new ChatSetting());
+        setting.setChatId(message.getChatId());
+        String answer;
+        if (deletePeriod == 0) {
+            setting.setTimeForDeleteMessage(null);
+            answer = "Сообщения от бота в этом чате не будут удаляться";
+        } else {
+            setting.setTimeForDeleteMessage(deletePeriod);
+            var duration = Duration.ofMillis(deletePeriod);
+            answer = "Сообщения от бота в этом чате будут удаляться через: ";
+            var days = duration.toDays();
+            var hours = duration.toHours() - (days * 24);
+            var minutes = duration.toMinutes() - (days * 24 * 60) - (hours * 60);
+            var seconds = duration.toSeconds() - (days * 24 * 60 * 60) - (hours * 60 * 60) - (minutes * 60);
+            if (days > 0) {
+                answer += days + "д ";
+            }
+            if (hours > 0) {
+                answer += hours + "ч ";
+            }
+            if (minutes > 0) {
+                answer += minutes + "м ";
+            }
+            if (seconds > 0) {
+                answer += seconds + "с ";
+            }
+        }
+        chatSettingRepository.save(setting);
+        sendMessage(message, answer, false);
     }
 
     private void showStat(Message message) throws TelegramApiException {
@@ -634,7 +738,7 @@ public class BotService {
         InputFile inputFile = new InputFile();
         inputFile.setMedia(sticker.getFileId());
         sendSticker.setSticker(inputFile);
-        telegramService.execute(sendSticker);
+        telegramService.sendSticker(sendSticker);
     }
 
     public Chats registerChat(Message message) {
