@@ -1,5 +1,5 @@
 plugins {
-    id 'org.springframework.boot' version '2.6.2'
+    id 'org.springframework.boot' version '2.7.0'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'java'
     id 'checkstyle'
@@ -19,7 +19,7 @@ checkstyleTest {
 
 dependencyManagement {
     imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:2021.0.0")
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:2021.0.3")
     }
 }
 
@@ -50,23 +50,26 @@ jar {
 
 dependencies {
 
-    implementation group: 'org.postgresql', name: 'postgresql', version: '42.3.1'
+    implementation group: 'org.postgresql', name: 'postgresql', version: '42.3.6'
 
     implementation 'org.springframework.boot:spring-boot-starter-log4j2'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-activemq'
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
-    implementation 'org.springframework.boot:spring-boot-starter-quartz:2.6.2'
+    implementation 'org.springframework.boot:spring-boot-starter-quartz:2.7.0'
 
     implementation group: 'com.github.xabgesagtx', name: 'telegram-spring-boot-starter', version: '0.26'
 
-    implementation group: 'ws.schild', name: 'jave-core', version: '3.2.0'
-    implementation group: 'ws.schild', name: 'jave-nativebin-linux64', version: '3.2.0'
+    implementation group: 'ws.schild', name: 'jave-core', version: '3.3.1'
+    implementation group: 'ws.schild', name: 'jave-nativebin-linux64', version: '3.3.1'
 
     implementation 'io.github.furstenheim:copy_down:1.0'
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+
+    implementation group: 'org.mapstruct', name: 'mapstruct', version: '1.4.1.Final'
+    annotationProcessor group: 'org.mapstruct', name: 'mapstruct-processor', version: '1.4.1.Final'
 
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
