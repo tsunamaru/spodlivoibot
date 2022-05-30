@@ -12,3 +12,5 @@
 !/README.md
 !/LICENSE
 !/config
+!/deployment.yaml
+!/build.sh

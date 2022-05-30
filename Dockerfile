@@ -1,20 +1,8 @@
 FROM ibm-semeru-runtimes:open-17-jdk as builder
 
-COPY ./src /workspace/src
-COPY ./build.gradle /workspace/build.gradle
-ENV GV=7.3.3
-ENV JAVA_OPTS="-Dfile.encoding=UTF-8"
-ADD https://downloads.gradle-dn.com/distributions/gradle-${GV}-bin.zip /workspace
-WORKDIR /workspace
-
 RUN apt update -qq && \
     apt install -y \
-        binutils \
-        unzip \
-    && \
-    unzip gradle-${GV}-bin.zip && \
-    rm -f gradle-${GV}-bin.zip && \
-    ./gradle-${GV}/bin/gradle assemble --no-daemon
+        binutils
 
 RUN jlink \
          --add-modules ALL-MODULE-PATH \
@@ -26,7 +14,14 @@ RUN jlink \
 
 FROM debian:stable-slim
 
-ADD https://github.com/tianon/gosu/releases/download/1.14/gosu-amd64 /bin/gosu
+RUN apt update -y && \
+    apt install -y curl && \
+    curl -L https://github.com/tianon/gosu/releases/download/1.14/gosu-$(dpkg --print-architecture) > /bin/gosu && \
+    chmod +x /bin/gosu && \
+    apt remove -y curl && \
+    apt autoremove -y && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY ./utils/docker-entrypoint.sh /bin
 
 RUN cp /usr/share/zoneinfo/Europe/Moscow /etc/localtime && \
@@ -37,7 +32,7 @@ ENV JAVA_HOME=/opt/java/openjdk
 ENV PATH "${JAVA_HOME}/bin:${PATH}"
 COPY --from=builder /javaruntime $JAVA_HOME
 
-COPY --from=builder --chown=nobody:nogroup /workspace/build/libs/*.jar /workspace/spodlivoi.jar
+COPY --chown=nobody:nogroup ./build/libs/*.jar /workspace/spodlivoi.jar
 
 WORKDIR /workspace
 ENTRYPOINT /bin/docker-entrypoint.sh
