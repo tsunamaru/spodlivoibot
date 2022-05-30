@@ -31,7 +31,7 @@ services:
             - db
 
     db:
-        image: postgres:13-alpine
+        image: postgres:14-alpine
         environment:
             POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-ChangeMeBef0reF!rstRun}"
             POSTGRES_USER: spodlivoi
