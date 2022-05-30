@@ -1,0 +1,86 @@
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: local
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: spodlivoidb
+  labels:
+    type: local
+spec:
+  storageClassName: "local"
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/spodlivoidb"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spodlivoibot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spodlivoibot
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: spodlivoibot
+    spec:
+      containers:
+      - name: spodlivoi
+        image: ghcr.io/tsunamaru/spodlivoibot/ci-build:latest
+        imagePullPolicy: Always
+        env:
+        - name: TELEGRAM_BOT_TOKEN
+          value: ${TELEGRAM_BOT_TOKEN}
+        - name: TELEGRAM_BOT_USERNAME
+          value: ${TELEGRAM_BOT_USERNAME}
+        - name: TELEGRAM_BOT_ADMIN-CHAT-ID
+          value: ${TELEGRAM_BOT_ADMIN_CHAT_ID}
+        - name: SPRING_DATASOURCE_USERNAME
+          value: "spodlivoi"
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: "spodlivoi"
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:postgresql://db:5432/spodlivoi"
+        - name: LOGGING_FILE_NAME
+          value: "/dev/null"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "12Gi"
+            cpu: "4000m"
+      - name: db
+        image: postgres:14-alpine
+        imagePullPolicy: Always
+        env:
+        - name: POSTGRES_USER
+          value: "spodlivoi"
+        - name: POSTGRES_PASSWORD
+          value: "spodlivoi"
+        - name: POSTGRES_DB
+          value: "spodlivoi"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+        volumeMounts:
+          - name: spodlivoidb
+            mountPath: /var/lib/postgresql/data
+          
