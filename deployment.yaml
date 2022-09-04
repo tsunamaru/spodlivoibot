@@ -3,17 +3,12 @@ items:
 - apiVersion: v1
   kind: Namespace
   metadata:
-    creationTimestamp: null
     labels:
       kubernetes.io/metadata.name: spodlivoi
     name: spodlivoi
-  spec: {}
-  status:
-    phase: Active
 - apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
-    creationTimestamp: null
     name: spodlivoidb
     namespace: spodlivoi
   spec:
@@ -22,13 +17,9 @@ items:
     resources:
       requests:
         storage: 10Gi
-    volumeMode: Filesystem
-  status:
-    phase: Pending
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
-    creationTimestamp: null
     name: spodlivoibot
     namespace: spodlivoi
   spec:
@@ -59,7 +50,7 @@ items:
           - name: SPRING_DATASOURCE_PASSWORD
             value: spodlivoi
           - name: SPRING_DATASOURCE_URL
-            value: jdbc:postgresql://db:5432/spodlivoi
+            value: jdbc:postgresql://db-svc:5432/spodlivoi
           - name: LOGGING_FILE_NAME
             value: /dev/null
           image: ghcr.io/tsunamaru/spodlivoibot/ci-build:latest
@@ -83,6 +74,9 @@ items:
           image: postgres:14-alpine
           imagePullPolicy: Always
           name: db
+          ports:
+          - containerPort: 5432
+            protocol: TCP
           resources:
             limits:
               memory: 256Mi
@@ -92,17 +86,27 @@ items:
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
           volumeMounts:
-          - mountPath: /var/lib/postgresql/data
+          - mountPath: /var/lib/postgresql
             name: spodlivoidb
         dnsPolicy: ClusterFirst
         restartPolicy: Always
         schedulerName: default-scheduler
-        securityContext: {}
         terminationGracePeriodSeconds: 30
         volumes:
         - name: spodlivoidb
           persistentVolumeClaim:
             claimName: spodlivoidb
-  status: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: db-svc
+    namespace: spodlivoi
+  spec:
+    ports:
+    - name: db
+      port: 5432
+    selector:
+      app: spodlivoibot
+    type: ClusterIP
 kind: List
 metadata: {}
