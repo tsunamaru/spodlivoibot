@@ -13,4 +13,5 @@
 !/LICENSE
 !/config
 !/k8s
+/k8s/*.kubeconfig
 !/build.sh
