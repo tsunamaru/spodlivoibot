@@ -40,11 +40,21 @@ items:
         containers:
         - env:
           - name: TELEGRAM_BOT_TOKEN
-            value: ${TELEGRAM_BOT_TOKEN}
+            valueFrom:
+              secretKeyRef:
+                key: token
+                name: bot-secrets
           - name: TELEGRAM_BOT_USERNAME
-            value: ${TELEGRAM_BOT_USERNAME}
+            valueFrom:
+              secretKeyRef:
+                key: username
+                name: bot-secrets
           - name: TELEGRAM_BOT_ADMIN-CHAT-ID
-            value: ${TELEGRAM_BOT_ADMIN_CHAT_ID}
+            valueFrom:
+              secretKeyRef:
+                key: adm_chat_id
+                name: bot-secrets
+                optional: true
           - name: SPRING_DATASOURCE_USERNAME
             value: spodlivoi
           - name: SPRING_DATASOURCE_PASSWORD
