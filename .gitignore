@@ -12,5 +12,5 @@
 !/README.md
 !/LICENSE
 !/config
-!/deployment.yaml
+!/k8s
 !/build.sh
