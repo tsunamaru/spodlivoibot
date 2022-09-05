@@ -11,7 +11,10 @@ items:
   metadata:
     name: spodlivoidb
     namespace: spodlivoi
+    annotations:
+      volume.beta.kubernetes.io/storage-class: "efs-sc"
   spec:
+    storageClassName: efs-sc
     accessModes:
     - ReadWriteOnce
     resources:
