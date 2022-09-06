@@ -14,13 +14,31 @@ jobs:
       uses: actions/checkout@v3
       with:
         lfs: false
+
+    - uses: actions/setup-java@v1
+      with:
+        java-version: '17'
+        java-package: jdk
+        architecture: x64
+
+    - name: Install Gradle 7.3.3
+      run: wget https://downloads.gradle-dn.com/distributions/gradle-7.3.3-bin.zip && unzip gradle-7.3.3-bin.zip
+
+    - name: Run checkstyle
+      run: ./gradle-7.3.3/bin/gradle checkstyleMain
+
+    - name: Run Gradle
+      run: ./gradle-7.3.3/bin/gradle build
+
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag localbuild/testimage:latest
+
     - name: Run the Anchore scan action itself with GitHub Advanced Security code scanning integration enabled
       uses: anchore/scan-action@v2.0.4
       with:
         image: "localbuild/testimage:latest"
         acs-report-enable: true
+
     - name: Upload Anchore Scan Report
       uses: github/codeql-action/upload-sarif@v1
       with:
