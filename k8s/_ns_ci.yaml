@@ -1,0 +1,47 @@
+apiVersion: v1
+items:
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: Role
+  metadata:
+    name: ns-ci
+    namespace: spodlivoi
+  rules:
+  - apiGroups:
+    - apps
+    resources:
+    - deployments
+    verbs:
+    - get
+    - list
+    - patch
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: RoleBinding
+  metadata:
+    name: ns-ci
+    namespace: spodlivoi
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: Role
+    name: ns-ci
+  subjects:
+  - kind: ServiceAccount
+    name: ns-ci-sa
+    namespace: spodlivoi
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: ns-ci-sa
+    namespace: spodlivoi
+  secrets:
+  - name: ns-ci-secret
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    annotations:
+      kubernetes.io/service-account.name: ns-ci-sa
+    creationTimestamp: null
+    name: ns-ci-secret
+    namespace: spodlivoi
+  type: kubernetes.io/service-account-token
+kind: List
+metadata: {}
