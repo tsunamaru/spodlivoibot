@@ -2,6 +2,9 @@ package spodlivoi.dvach;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
+import com.github.kokorin.jaffree.ffmpeg.UrlInput;
+import com.github.kokorin.jaffree.ffmpeg.UrlOutput;
 import io.github.furstenheim.CopyDown;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,20 +21,11 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
 import spodlivoi.service.TelegramService;
 import spodlivoi.utils.Randomizer;
-import ws.schild.jave.Encoder;
-import ws.schild.jave.MultimediaObject;
-import ws.schild.jave.encode.ArgType;
-import ws.schild.jave.encode.AudioAttributes;
-import ws.schild.jave.encode.EncodingAttributes;
-import ws.schild.jave.encode.ValueArgument;
-import ws.schild.jave.encode.VideoAttributes;
-import ws.schild.jave.encode.enums.X264_PROFILE;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -131,31 +125,31 @@ public class DvachInteractorImpl implements DvachInteractor {
                 Thread.sleep(5000);
             }
             videoStats++;
-            VideoAttributes videoAttributes = new VideoAttributes();
-            videoAttributes.setCodec("libx264");
-            videoAttributes.setX264Profile(X264_PROFILE.MAIN);
-            videoAttributes.setQuality(15);
-            videoAttributes.setFaststart(true);
-
-            AudioAttributes audioAttributes = new AudioAttributes();
-            audioAttributes.setCodec("aac");
-            audioAttributes.setChannels(2);
-            audioAttributes.setQuality(15);
-
-            //Encoding attributes
-            EncodingAttributes attrs = new EncodingAttributes();
-            attrs.setInputFormat(format);
-            attrs.setMapMetaData(false);
-            attrs.setOutputFormat("mp4");
-            attrs.setVideoAttributes(videoAttributes);
-            attrs.setAudioAttributes(audioAttributes);
-
-            //Encode
-            Encoder.addOptionAtIndex(new ValueArgument(ArgType.OUTFILE, "-vf", ea ->
-                    Optional.of("pad=ceil(iw/2)*2:ceil(ih/2)*2")), 30);
-            Encoder encoder = new Encoder();
-
-            encoder.encode(new MultimediaObject(sourceVideo), targetVideo, attrs);
+            FFmpeg.atPath()
+                    .addInput(UrlInput.fromPath(sourceVideo.toPath()))
+                    .addOutput(UrlOutput.toPath(targetVideo.toPath()))
+                    .addArguments("-c:v", "libx264")
+                    .addArguments("-c:a", "aac")
+                    .addArguments("-f", "mp4")
+                    .addArguments("-crf", "35")
+                    .addArguments("-profile:v", "main")
+                    .addArguments("-q:a", "15")
+                    .addArguments("-q:v", "15")
+                    .addArguments("-map", "0")
+                    .addArguments("-map_metadata", "0")
+                    .addArguments("-map_chapters", "0")
+                    .addArguments("-movflags", "+use_metadata_tags")
+                    .addArguments("-pix_fmt", "yuv420p")
+                    .addArguments("-g", "50")
+                    .addArguments("-b:a", "160k")
+                    .addArguments("-ac", "2")
+                    .addArguments("-ar", "44100")
+                    .addArguments("-bufsize", "7000k")
+                    .addArguments("-maxrate", "3500k")
+                    .addArguments("-b:v", "3500k")
+                    .addArguments("-preset", "veryfast")
+                    .addArguments("-movflags", "+faststart")
+                    .execute();
 
             if (targetVideo.exists()) {
 
@@ -165,7 +159,7 @@ public class DvachInteractorImpl implements DvachInteractor {
                 InputFile inputFile = new InputFile();
                 inputFile.setMedia(targetVideo);
                 sendVideo.setVideo(inputFile);
-
+                sendVideo.setSupportsStreaming(true);
                 telegramService.execute(sendVideo);
                 if (sourceVideo.exists()) {
                     sourceVideo.delete();
@@ -239,11 +233,14 @@ public class DvachInteractorImpl implements DvachInteractor {
             return null;
         }
 
-        var videoPosts = dvachClient.getThread(threadNumber);
+        var videoPosts = (ArrayNode) dvachClient.getThread(threadNumber).get("threads").get(0).get("posts");
 
         while (video.equals("")) {
             int r = Randomizer.getRandomNumberInRange(0, videoPosts.size() - 1);
             var postJson = videoPosts.get(r);
+            if (postJson.isNull() || !postJson.has("files") || postJson.get("files").isNull()) {
+                continue;
+            }
             var files = (ArrayNode) postJson.get("files");
             if (!files.isEmpty()) {
                 video = "https://2ch.hk" + files.get(0).get("path").asText();

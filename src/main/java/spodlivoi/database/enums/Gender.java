@@ -2,7 +2,6 @@ package spodlivoi.database.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import spodlivoi.utils.Randomizer;
 
 @RequiredArgsConstructor
 public enum Gender {
@@ -15,14 +14,11 @@ public enum Gender {
     @Getter
     private final String name;
 
-    public static Gender getRandomGender() {
-        int random = Randomizer.getRandomNumberInRange(1, 100);
-        if (random <= 45) {
+    public Gender getNextGender() {
+        if (ordinal() + 1 == values().length) {
             return MALE;
-        } else if (random <= 90) {
-            return FEMALE;
         } else {
-            return FIGHT_HELICOPTER;
+            return values()[ordinal() + 1];
         }
     }
 

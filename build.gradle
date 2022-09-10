@@ -1,6 +1,6 @@
 plugins {
-    id 'org.springframework.boot' version '2.7.0'
-    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'org.springframework.boot' version '2.7.3'
+    id 'io.spring.dependency-management' version '1.0.13.RELEASE'
     id 'java'
     id 'checkstyle'
 }
@@ -19,7 +19,7 @@ checkstyleTest {
 
 dependencyManagement {
     imports {
-        mavenBom("org.springframework.cloud:spring-cloud-dependencies:2021.0.3")
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:2021.0.4")
     }
 }
 
@@ -56,24 +56,19 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-activemq'
     implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
-    implementation 'org.springframework.boot:spring-boot-starter-quartz:2.7.0'
+    implementation 'org.springframework.boot:spring-boot-starter-quartz:2.7.3'
 
-    implementation group: 'com.github.xabgesagtx', name: 'telegram-spring-boot-starter', version: '0.26'
+    implementation 'org.telegram:telegrambots-spring-boot-starter:6.1.0'
 
-    implementation group: 'ws.schild', name: 'jave-core', version: '3.3.1'
-    implementation group: 'ws.schild', name: 'jave-nativebin-linux64', version: '3.3.1'
-    implementation group: 'ws.schild', name: 'jave-nativebin-osx64', version: '3.3.1'
-    implementation group: 'ws.schild', name: 'jave-nativebin-win64', version: '3.3.1'
-    implementation group: 'ws.schild', name: 'jave-nativebin-linux-arm64', version: '3.3.1'
-    implementation group: 'ws.schild', name: 'jave-nativebin-osxm1', version: '3.3.1'
+    implementation 'com.github.kokorin.jaffree:jaffree:2022.06.03'
 
-    implementation 'io.github.furstenheim:copy_down:1.0'
+    implementation 'io.github.furstenheim:copy_down:1.1'
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
-    implementation group: 'org.mapstruct', name: 'mapstruct', version: '1.4.1.Final'
-    annotationProcessor group: 'org.mapstruct', name: 'mapstruct-processor', version: '1.4.1.Final'
+    implementation group: 'org.mapstruct', name: 'mapstruct', version: '1.5.2.Final'
+    annotationProcessor group: 'org.mapstruct', name: 'mapstruct-processor', version: '1.5.2.Final'
 
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'

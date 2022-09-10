@@ -55,7 +55,6 @@ import spodlivoi.message.Messages;
 import spodlivoi.roll.RollerInteractor;
 import spodlivoi.utils.Randomizer;
 import spodlivoi.utils.StringUtil;
-import ws.schild.jave.EncoderException;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
@@ -116,18 +115,17 @@ public class BotService {
 
     @JmsListener(destination = "podlivaQueue", containerFactory = "myFactory")
     public void acceptQueue(Update update)
-            throws InterruptedException, TelegramApiException, EncoderException, IOException, InvocationTargetException,
+            throws InterruptedException, TelegramApiException, IOException, InvocationTargetException,
             NoSuchMethodException, IllegalAccessException {
         acceptUpdate(update);
     }
 
     public void acceptUpdate(Update update)
-            throws InterruptedException, TelegramApiException, EncoderException, IOException, InvocationTargetException,
-            NoSuchMethodException, IllegalAccessException {
+            throws InterruptedException, TelegramApiException, IOException {
         try {
+            log.debug("Accept {}", update);
             if (update.hasMessage()) {
                 Message message = update.getMessage();
-                log.debug("Accept {}", message);
                 Optional<Ddos> ddos = ddosRepository.findByTelegramUserId(message.getFrom().getId().longValue());
                 if (ddos.isPresent() && ddos.get().getActive()) {
                     sendRandomCopypaste(ddos.get().getCopypaste(), message, true);
@@ -238,7 +236,7 @@ public class BotService {
     }
 
     private void acceptCommand(Message message)
-            throws TelegramApiException, IOException, EncoderException, InterruptedException {
+            throws TelegramApiException, IOException, InterruptedException {
         String messageText = message.getText();
         String command;
         if (messageText.contains("@")) {
@@ -430,8 +428,10 @@ public class BotService {
         if (user.getSettings() == null) {
             settings = new UserSettings();
             settings.setUser(user);
-            settings.setRollAnus(true);
             settings.setRollDick(true);
+            settings.setRollVagina(false);
+            settings.setRollAnus(false);
+            settings.setGender(Gender.MALE);
             settings = userSettingsRepository.save(settings);
         } else {
             settings = user.getSettings();
@@ -482,13 +482,11 @@ public class BotService {
                     .callbackData(messages.getSettingsButtonPrefix() + "13" + "_" + id).build());
             rowsInline.add(rowInline1);
         }
-        if (settings.isAccessGenderChange() || debug) {
-            List<InlineKeyboardButton> rowInline = new ArrayList<>();
-            rowInline.add(InlineKeyboardButton.builder()
-                    .text(messages.getChangeGender())
-                    .callbackData(messages.getSettingsButtonPrefix() + "4" + "_" + id).build());
-            rowsInline.add(rowInline);
-        }
+        List<InlineKeyboardButton> genderChange = new ArrayList<>();
+        genderChange.add(InlineKeyboardButton.builder()
+                .text(messages.getChangeGender())
+                .callbackData(messages.getSettingsButtonPrefix() + "4" + "_" + id).build());
+        rowsInline.add(genderChange);
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
         rowInline.add(InlineKeyboardButton.builder()
                 .text(messages.getCancel())
@@ -612,9 +610,8 @@ public class BotService {
                     userSettings.setRollVagina(!userSettings.isRollVagina());
                     break;
                 case 4:
-                    Gender gender = Gender.getRandomGender();
+                    Gender gender = userSettings.getGender().getNextGender();
                     userSettings.setGender(gender);
-                    userSettings.setAccessGenderChange(false);
                     if (gender == Gender.MALE) {
                         userSettings.setRollVagina(false);
                     }
