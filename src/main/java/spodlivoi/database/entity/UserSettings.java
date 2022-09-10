@@ -44,8 +44,6 @@ public class UserSettings {
     private boolean rollVagina;
     private boolean rollDick;
     private boolean changeSetting;
-    @Column(columnDefinition = "boolean default true", nullable = false)
-    private boolean accessGenderChange;
 
     @Override
     public boolean equals(Object o) {
