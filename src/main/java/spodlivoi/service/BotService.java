@@ -409,12 +409,7 @@ public class BotService {
         } else {
             Users user = userOpional.get();
             if (user.getSettings() == null) {
-                UserSettings settings = new UserSettings();
-                settings.setUser(user);
-                settings.setRollAnus(true);
-                settings.setRollDick(true);
-                settings.setChangeSetting(false);
-                user.setSettings(userSettingsRepository.save(settings));
+                user.setSettings(createDefaultSettings(user));
             }
             sendMessage(message, messages.getSettingName(username, user.getSettings()), true);
         }
@@ -426,13 +421,7 @@ public class BotService {
         Users user = getUserByMessage(message);
         UserSettings settings;
         if (user.getSettings() == null) {
-            settings = new UserSettings();
-            settings.setUser(user);
-            settings.setRollDick(true);
-            settings.setRollVagina(false);
-            settings.setRollAnus(false);
-            settings.setGender(Gender.MALE);
-            settings = userSettingsRepository.save(settings);
+            settings = createDefaultSettings(user);
         } else {
             settings = user.getSettings();
         }
@@ -442,6 +431,17 @@ public class BotService {
         sendMessage.setText(messages.getSettingName(message.getFrom().getUserName(), settings));
         sendMessage.enableMarkdown(true);
         telegramService.execute(sendMessage);
+    }
+
+    private UserSettings createDefaultSettings(Users user) {
+        var settings = new UserSettings();
+        settings.setUser(user);
+        settings.setRollDick(true);
+        settings.setRollVagina(false);
+        settings.setRollAnus(false);
+        settings.setGender(Gender.MALE);
+        settings = userSettingsRepository.save(settings);
+        return settings;
     }
 
     private ReplyKeyboard getSettingsReplyKeyboard(UserSettings settings) {
@@ -787,7 +787,11 @@ public class BotService {
 
     private void roll(Message message) throws TelegramApiException {
         for (RollerInteractor roller : rollers) {
-            roller.roll(message, getUserByMessage(message));
+            var user = getUserByMessage(message);
+            if (user.getSettings() == null) {
+                user.setSettings(createDefaultSettings(user));
+            }
+            roller.roll(message, user);
         }
     }
 
