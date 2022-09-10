@@ -62,6 +62,10 @@ dependencies {
 
     implementation group: 'ws.schild', name: 'jave-core', version: '3.3.1'
     implementation group: 'ws.schild', name: 'jave-nativebin-linux64', version: '3.3.1'
+    implementation group: 'ws.schild', name: 'jave-nativebin-osx64', version: '3.3.1'
+    implementation group: 'ws.schild', name: 'jave-nativebin-win64', version: '3.3.1'
+    implementation group: 'ws.schild', name: 'jave-nativebin-linux-arm64', version: '3.3.1'
+    implementation group: 'ws.schild', name: 'jave-nativebin-osxm1', version: '3.3.1'
 
     implementation 'io.github.furstenheim:copy_down:1.0'
 
