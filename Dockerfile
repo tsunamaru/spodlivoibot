@@ -15,11 +15,7 @@ RUN jlink \
 FROM debian:stable-slim
 
 RUN apt update -y && \
-    apt install -y curl && \
-    curl -L https://github.com/tianon/gosu/releases/download/1.14/gosu-$(dpkg --print-architecture) > /bin/gosu && \
-    chmod +x /bin/gosu && \
-    apt remove -y curl && \
-    apt autoremove -y && \
+    apt install -y gosu && \
     rm -rf /var/lib/apt/lists/*
 
 COPY ./utils/docker-entrypoint.sh /bin
