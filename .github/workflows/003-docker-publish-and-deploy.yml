@@ -72,25 +72,16 @@ jobs:
           docker buildx build --platform linux/amd64,linux/arm64 -t $IMAGE_ID:$VERSION . --push
 
 
-  # deploy:
-  #   runs-on: self-hosted
-  #   needs: build
-  #   steps:
-  #     - name: Log into registry
-  #       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+  deploy:
+      runs-on: ubuntu-latest
+      needs: build
+      if: github.event_name == 'push'
+      steps:
+        - name: Setup kubectl
+          uses: tale/kubectl-action@v1
+          with:
+            base64-kube-config: ${{ secrets.KUBECONFIG }}
+            kubectl-version: v1.23.0
 
-  #     - name: Pull and deploy
-  #       run: |
-  #         VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
-  #         [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
-  #         curl -O -L https://raw.githubusercontent.com/${{ github.repository }}/$VERSION/docker-compose.yml
-
-  #         export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-  #         export TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
-  #         export TELEGRAM_BOT_USERNAME=${{ secrets.TELEGRAM_BOT_USERNAME }}
-  #         export TELEGRAM_BOT_ADMIN_CHAT_ID=${{ secrets.TELEGRAM_BOT_ADMIN_CHAT_ID }}
-
-  #         docker-compose pull
-  #         docker-compose down || true
-  #         docker-compose up --no-build -d
-  #         docker image prune -f
+        - name: Deploy to Kubernetes
+          run: kubectl rollout restart deployment spodlivoibot -n spodlivoi
