@@ -14,20 +14,9 @@ RUN jlink \
 
 FROM debian:stable-slim
 
-ENV FFMPEG_AMD64_URL https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-amd64-static.tar.xz
-ENV FFMPEG_ARM64_URL https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-arm64-static.tar.xz
-
 RUN apt update -y && \
     apt upgrade -y && \
-    apt install -y gosu && \
-    rm -rf /var/lib/apt/lists/*
-
-COPY ./utils/get-ffmpeg.sh /usr/local/bin/get-ffmpeg
-
-RUN apt update -y && \
-    apt install -y curl xz-utils && \
-    bash /usr/local/bin/get-ffmpeg && \
-    apt remove -y curl xz-utils && \
+    apt install -y gosu ffmpeg && \
     rm -rf /var/lib/apt/lists/*
 
 COPY ./utils/docker-entrypoint.sh /bin
