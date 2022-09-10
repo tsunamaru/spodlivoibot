@@ -15,6 +15,7 @@ RUN jlink \
 FROM debian:stable-slim
 
 RUN apt update -y && \
+    apt upgrade -y && \
     apt install -y gosu && \
     rm -rf /var/lib/apt/lists/*
 
