@@ -52,6 +52,9 @@ And if you want to use limits, use `--compatibility`.
 
 Demo: [@spodlivoi_bot](https://t.me/spodlivoi_bot)  
 
+### Installation (Kubernetes)
+See k8s/README.md for details on Kubernetes deployment (work in progress, documentation sucks).
+
 <!-- badge links -->
 
 [actions-workflow-test]: https://github.com/tsunamaru/spodlivoibot/actions?query=workflow%3ADeployment
