@@ -33,7 +33,7 @@ public class Chats implements Serializable {
     @Column(name = "id", nullable = false)
     private long id;
     @Basic
-    @Column(name = "chat_name", nullable = true, length = 50)
+    @Column(name = "chat_name", nullable = true, length = 120)
     private String chatName;
     @Basic
     @Column(name = "chat_id", nullable = false)
