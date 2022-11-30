@@ -30,10 +30,10 @@ settings:
   anus-roll: |-
     Ролл ануса: %s
   vagina-roll: |-
-    Ролл вагины: %s
+    Ролл пизды: %s
   amputate-dick: Отрезать хуй
   sew-anus: Зашить анус
-  sew-vagina: Зашить вагину
+  sew-vagina: Зашить пизду
   change-gender: Сменить гендер
   gender: |-
     Гендер: %s
@@ -46,5 +46,5 @@ settings:
   anus-size: |-
     Текущий размер ануса: %d см
   vagina-size: |-
-    Текущий размер вагины: %d см
+    Текущий размер пизды: %d см
   button-prefix: settings_
