@@ -58,6 +58,6 @@ See k8s/README.md for details on Kubernetes deployment (work in progress, docume
 <!-- badge links -->
 
 [actions-workflow-test]: https://github.com/tsunamaru/spodlivoibot/actions?query=workflow%3ADeployment
-[actions-workflow-test-badge]: https://img.shields.io/github/workflow/status/tsunamaru/spodlivoibot/Deployment?label=CI&style=for-the-badge&logo=github
+[actions-workflow-test-badge]: https://img.shields.io/github/actions/workflow/status/tsunamaru/spodlivoibot/003-docker-publish-and-deploy.yml?branch=master&label=CI&logo=github&style=for-the-badge
 [license]: LICENSE
 [license-badge]: https://img.shields.io/github/license/tsunamaru/spodlivoibot?style=for-the-badge&logo=apache
