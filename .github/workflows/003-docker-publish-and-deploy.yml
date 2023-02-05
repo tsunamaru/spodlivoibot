@@ -11,7 +11,7 @@ on:
       - v*
 
 env:
-  IMAGE_NAME: ci-build
+  CI_IMAGE_NAME: ci-build
 
 jobs:
   build:
@@ -50,38 +50,32 @@ jobs:
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Build image
+      - name: Build CI image
         run: |
-          IMAGE_ID=ghcr.io/${{ github.repository }}/$IMAGE_NAME
-
-          # Change all uppercase to lowercase
+          IMAGE_ID=ghcr.io/${{ github.repository }}/$CI_IMAGE_NAME
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
 
-          # Strip git ref prefix from version
-          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
-
-          # Strip "v" prefix from tag name
-          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
-
-          # Use Docker `latest` tag convention
-          [ "$VERSION" == "master" ] && VERSION=latest
+          VERSIONS=()
+          if [[ $GITHUB_REF == refs/heads/master ]]; then
+            VERSIONS+=("latest")
+            VERSIONS+=("RELEASE.$(date -u '+%Y-%m-%dT%H-%M-%SZ')")
+          else
+            VERSIONS+=("${GITHUB_REF##*/}-${GITHUB_SHA:0:7}-$(date +%s)")
+          fi
 
           echo IMAGE_ID=$IMAGE_ID
-          echo VERSION=$VERSION
+          echo VERSIONS=${VERSIONS[@]}
 
-          docker buildx build --platform linux/amd64,linux/arm64 -t $IMAGE_ID:$VERSION . --push
+          for VERSION in "${VERSIONS[@]}"; do
+            echo "Building $IMAGE_ID:$VERSION"
+            docker buildx build --platform linux/amd64,linux/arm64 -t $IMAGE_ID:$VERSION . --push -f Dockerfile
+          done
 
-
-  deploy:
-      runs-on: ubuntu-latest
-      needs: build
-      if: github.event_name == 'push'
-      steps:
-        - name: Setup kubectl
-          uses: tale/kubectl-action@v1
-          with:
-            base64-kube-config: ${{ secrets.KUBECONFIG }}
-            kubectl-version: v1.23.0
-
-        - name: Deploy to Kubernetes
-          run: kubectl rollout restart deployment spodlivoibot -n spodlivoi
+      - name: Delete all containers from repository without tags
+        uses: Chizkiyahu/delete-untagged-ghcr-action@v2
+        with:
+            token: ${{ secrets.CLEANUP_PAT_TOKEN }}
+            repository_owner: ${{ github.repository_owner }}
+            repository: ${{ github.repository }}
+            untagged_only: true
+            owner_type: user
