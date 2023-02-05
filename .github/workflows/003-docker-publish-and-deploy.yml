@@ -80,3 +80,4 @@ jobs:
             untagged_only: true
             owner_type: user
             except_untagged_multiplatform: true
+        continue-on-error: true
